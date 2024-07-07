@@ -4,47 +4,46 @@ import io.github.aftersans53228.aft_fabroads.block.voxelshapes.SignEast;
 import io.github.aftersans53228.aft_fabroads.block.voxelshapes.SignNorth;
 import io.github.aftersans53228.aft_fabroads.block.voxelshapes.SignSouth;
 import io.github.aftersans53228.aft_fabroads.block.voxelshapes.SignWest;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.*;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.server.command.PublishCommand;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
 
-public class SignNormal  extends HorizontalFacingBlock {
+public class SignNormal extends HorizontalDirectionalBlock {
     public SignNormal() {
-        super(FabricBlockSettings.of(Material.STONE).hardness(1.5f));
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f));
+        this.registerDefaultState(this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
-        stateManager.add(Properties.HORIZONTAL_FACING);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateManager) {
+        stateManager.add(BlockStateProperties.HORIZONTAL_FACING);
     }
+
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext ctx) {
-        Direction dir = state.get(FACING);
-        switch(dir) {
-            case NORTH:
-                return SignNorth.getShape();
-            case SOUTH:
-                return SignSouth.getShape();
-            case EAST:
-                return SignEast.getShape();
-            case WEST:
-                return SignWest.getShape();
-            default:
-                return VoxelShapes.fullCube();
-        }
+    public VoxelShape getShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
+        Direction dir = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        return switch (dir) {
+            case NORTH -> SignNorth.getShape();
+            case SOUTH -> SignSouth.getShape();
+            case EAST -> SignEast.getShape();
+            case WEST -> SignWest.getShape();
+            default -> Shapes.block();
+        };
     }
+
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getDefaultState().with(FACING, ctx.getPlayerFacing());
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.getHorizontalDirection());
     }
 }
-

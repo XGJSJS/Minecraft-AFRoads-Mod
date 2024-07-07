@@ -1,29 +1,29 @@
 package io.github.aftersans53228.aft_fabroads.item;
 
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
+import javax.annotation.Nullable;
 import java.util.List;
-
 
 public class RoadTool extends Item {
     public RoadTool() {
-        super(new FabricItemSettings().group(ItemGroup.TOOLS).maxCount(1).maxDamage(10));
+        super(new Item.Properties().tab(CreativeModeTab.TAB_TOOLS).stacksTo(1).durability(10));
     }
+
     @Override
-    public void appendTooltip(ItemStack itemStack, World world, List<Text> tooltip, TooltipContext tooltipContext) {
+    public void appendHoverText(ItemStack itemStack, @Nullable Level world, List<Component> tooltip, TooltipFlag tooltipContext) {
         // 默认为白色文本
-        tooltip.add( new TranslatableText(" ") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool.tip1") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool.tip2") );
-        tooltip.add( new TranslatableText(" ") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool.tip_all") );
+        tooltip.add( new TextComponent(" ") );
+        tooltip.add( new TranslatableComponent("item.aft_fabroads.road_tool.tip1") );
+        tooltip.add( new TranslatableComponent("item.aft_fabroads.road_tool.tip2") );
+        tooltip.add( new TextComponent(" ") );
+        tooltip.add( new TranslatableComponent("item.aft_fabroads.road_tool.tip_all") );
     }
 }

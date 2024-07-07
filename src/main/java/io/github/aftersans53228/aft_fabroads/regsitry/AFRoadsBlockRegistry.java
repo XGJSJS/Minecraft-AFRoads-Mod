@@ -9,158 +9,168 @@ import io.github.aftersans53228.aft_fabroads.block.stickerblock.ArrowBlocks;
 import io.github.aftersans53228.aft_fabroads.block.stickerblock.IconBlocks;
 import io.github.aftersans53228.aft_fabroads.block.stickerblock.LineBlocks;
 import io.github.aftersans53228.aft_fabroads.block.structureblock.*;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.Material;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import static io.github.aftersans53228.aft_fabroads.block.voxelshapes.RailingsFacing.*;
 
 public class AFRoadsBlockRegistry {
+    public static final DeferredRegister<Block> BLOCKS;
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES;
     
-    private static Block register(String id, Block block) {
-        return (Block)Registry.register(Registry.BLOCK, new Identifier(AFRoadsStatics.MOD_ID,id), block);
+    private static RegistryObject<Block> register(String id, Block block) {
+        return BLOCKS.register(id, () -> block);
     }
-    private static Block registerPillar(String id, Block block) {
-        AFRoadsStatics.PILLAR_BLOCKS.add(block);
-        return (Block)Registry.register(Registry.BLOCK, new Identifier(AFRoadsStatics.MOD_ID,id), block);
+
+    private static RegistryObject<Block> registerPillar(String id, Block block) {
+        final RegistryObject<Block> TEMP = register(id, block);
+        AFRoadsStatics.PILLAR_BLOCKS.add(TEMP);
+        return TEMP;
     }
-    private static Block setPillarConnect(Block block){
+
+    private static <T extends BlockEntity> RegistryObject<BlockEntityType<T>> register(BlockEntityType.BlockEntitySupplier<T> blockEntity, RegistryObject<Block> block) {
+        return BLOCK_ENTITY_TYPES.register(block.getId().getPath(), () -> BlockEntityType.Builder.of(blockEntity, block.get()).build(null));
+    }
+
+    private static RegistryObject<Block> setPillarConnect(RegistryObject<Block> block) {
         AFRoadsStatics.CAN_PILLAR_CONNECT.add(block);
         return block;
     }
 
-
-    public static  Block RoadBlock;
-    public static  Block RoadBlockConcrete;
-    public static  Block ManholeCover;
-    public static  Block ManholeCoverConcrete;
-    public static  Block RoadSeamsBlock ;
-    public static  Block RoadSeamsBlockConcrete ;
-    public static  Block ConcreteSlab ;
-    public static  Block ConcreteStairs;
-    public static  Block ConcreteStairsSmooth ;
-    public static  Block ConcreteColumnsCorner;
+    public static final RegistryObject<Block> RoadBlock;
+    public static final RegistryObject<Block> RoadBlockConcrete;
+    public static final RegistryObject<Block> ManholeCover;
+    public static final RegistryObject<Block> ManholeCoverConcrete;
+    public static final RegistryObject<Block> RoadSeamsBlock;
+    public static final RegistryObject<Block> RoadSeamsBlockConcrete;
+    public static final RegistryObject<Block> ConcreteSlab;
+    public static final RegistryObject<Block> ConcreteStairs;
+    public static final RegistryObject<Block> ConcreteStairsSmooth ;
+    public static final RegistryObject<Block> ConcreteColumnsCorner;
     //创建划线贴纸
-    public static  Block LineStraight;
-    public static  Block LineCorner ;
-    public static  Block LineTshaped ;
-    public static  Block LineCross ;
-    public static  Block LineDiagonal ;
-    public static  Block LineLeftBend ;
-    public static  Block LineRightBend ;
-    public static  Block LineForkLeft ;
-    public static  Block LineForkRight ;
-    public static  Block LineStraightThick;
-    public static  Block LineStraightDuoLine;
-    public static  Block LineStraightDuoThick;
-    public static  Block LineStraightDuoThickDashed;
-    public static  Block LineDecelerateWithLine ;
-    public static  Block LineDecelerateWithLineFlip ;
-    public static  Block LineDecelerateNoLine ;
-    public static  Block LineDecelerateNoLineFlip ;
-    public static  Block LineDecelerateDoubleNL ;
-    public static  Block LineDecelerateDoubleWL ;
-    public static  Block LineReversibleLanes  ;
-    public static  Block LineReversibleLanesFlip  ;
-    public static  Block LineReversibleLanesDouble ;
+    public static final RegistryObject<Block> LineStraight;
+    public static final RegistryObject<Block> LineCorner ;
+    public static final RegistryObject<Block> LineTshaped ;
+    public static final RegistryObject<Block> LineCross ;
+    public static final RegistryObject<Block> LineDiagonal ;
+    public static final RegistryObject<Block> LineLeftBend ;
+    public static final RegistryObject<Block> LineRightBend ;
+    public static final RegistryObject<Block> LineForkLeft ;
+    public static final RegistryObject<Block> LineForkRight ;
+    public static final RegistryObject<Block> LineStraightThick;
+    public static final RegistryObject<Block> LineStraightDuoLine;
+    public static final RegistryObject<Block> LineStraightDuoThick;
+    public static final RegistryObject<Block> LineStraightDuoThickDashed;
+    public static final RegistryObject<Block> LineDecelerateWithLine ;
+    public static final RegistryObject<Block> LineDecelerateWithLineFlip ;
+    public static final RegistryObject<Block> LineDecelerateNoLine ;
+    public static final RegistryObject<Block> LineDecelerateNoLineFlip ;
+    public static final RegistryObject<Block> LineDecelerateDoubleNL ;
+    public static final RegistryObject<Block> LineDecelerateDoubleWL ;
+    public static final RegistryObject<Block> LineReversibleLanes  ;
+    public static final RegistryObject<Block> LineReversibleLanesFlip  ;
+    public static final RegistryObject<Block> LineReversibleLanesDouble ;
     //创建箭头贴纸
-    public static  Block ArrowForward;
-    public static  Block ArrowLeft ;
-    public static  Block ArrowRight;
-    public static  Block ArrowForwardLeft ;
-    public static  Block ArrowForwardRight ;
-    public static  Block ArrowBack ;
-    public static  Block ArrowLeftRight ;
-    public static  Block ArrowBackLeft ;
-    public static  Block ArrowBackForward ;
-    public static  Block ArrowConfluenceLeft ;
-    public static  Block ArrowConfluenceRight ;
+    public static final RegistryObject<Block> ArrowForward;
+    public static final RegistryObject<Block> ArrowLeft ;
+    public static final RegistryObject<Block> ArrowRight;
+    public static final RegistryObject<Block> ArrowForwardLeft ;
+    public static final RegistryObject<Block> ArrowForwardRight ;
+    public static final RegistryObject<Block> ArrowBack ;
+    public static final RegistryObject<Block> ArrowLeftRight ;
+    public static final RegistryObject<Block> ArrowBackLeft ;
+    public static final RegistryObject<Block> ArrowBackForward ;
+    public static final RegistryObject<Block> ArrowConfluenceLeft ;
+    public static final RegistryObject<Block> ArrowConfluenceRight ;
     //创建图标贴纸
-    public static  Block IconDecelerateSticker;
-    public static  Block IconStopSticker;
-    public static  Block IconGiverWaySticker;
+    public static final RegistryObject<Block> IconDecelerateSticker;
+    public static final RegistryObject<Block> IconStopSticker;
+    public static final RegistryObject<Block> IconGiverWaySticker;
     //创建装饰方块
-    public static  Block Railings ;
-    public static  Block PavementRailings ;
-    public static  Block ExpresswayRailingsBase ;
-    public static  Block ExpresswayIronRailings;
-    public static  Block ExpresswayIronRailings2;
-    public static  Block ExpresswayRailings ;
-    public static  Block ExpresswayRailingsType2 ;
-    public static  Block InsulationPanelsRailings ;
-    public static  Block InsulationPanelsGrayPart1 ;
-    public static  Block InsulationPanelsGrayPart2;
-    public static  Block InsulationPanelsGrayPart3 ;
-    public static  Block InsulationPanelsGrayPart4;
-    public static  Block InsulationPanelsGrayPart5;
-    public static  Block InsulationPanelsGrayPart6 ;
+    public static final RegistryObject<Block> Railings ;
+    public static final RegistryObject<Block> PavementRailings ;
+    public static final RegistryObject<Block> ExpresswayRailingsBase ;
+    public static final RegistryObject<Block> ExpresswayIronRailings;
+    public static final RegistryObject<Block> ExpresswayIronRailings2;
+    public static final RegistryObject<Block> ExpresswayRailings ;
+    public static final RegistryObject<Block> ExpresswayRailingsType2 ;
+    public static final RegistryObject<Block> InsulationPanelsRailings ;
+    public static final RegistryObject<Block> InsulationPanelsGrayPart1 ;
+    public static final RegistryObject<Block> InsulationPanelsGrayPart2;
+    public static final RegistryObject<Block> InsulationPanelsGrayPart3 ;
+    public static final RegistryObject<Block> InsulationPanelsGrayPart4;
+    public static final RegistryObject<Block> InsulationPanelsGrayPart5;
+    public static final RegistryObject<Block> InsulationPanelsGrayPart6 ;
 
-    public static  Block BarrierBar;
-    public static  Block TrafficLightsControlBox;
-    public static  Block TrafficLight ;
-    public static  Block TrafficLightPavement ;
-    public static  Block RoadLight ;
+    public static final RegistryObject<Block> BarrierBar;
+    public static final RegistryObject<Block> TrafficLightsControlBox;
+    public static final RegistryObject<Block> TrafficLight;
+    public static final RegistryObject<Block> TrafficLightPavement ;
+    public static final RegistryObject<Block> RoadLight ;
 
-    public static  Block PillarBase ;
-    public static  Block HorizontalStraightPillar;
-    public static  Block VerticalStraightPillar ;
-    public static  Block HorizontalCornerPillar ;
-    public static  Block VerticalCornerPillar ;
-    public static  Block HorizontalTshapedPillar ;
-    public static  Block VerticalTshapedPillar ;
-    public static  Block VerticalTshapedPillarType2 ;
-    public static  Block RoadMastPillarBase ;
-    public static  Block RoadMastPillar;
-    public static  Block HorizontalStraightPillarThin ;
-    public static  Block VerticalStraightPillarThin ;
-    public static  Block VerticalCornerPillarThin;
-    public static  Block SmartPillar;
-    public static  Block SmartPillarThin;
+    public static final RegistryObject<Block> PillarBase ;
+    public static final RegistryObject<Block> HorizontalStraightPillar;
+    public static final RegistryObject<Block> VerticalStraightPillar ;
+    public static final RegistryObject<Block> HorizontalCornerPillar ;
+    public static final RegistryObject<Block> VerticalCornerPillar ;
+    public static final RegistryObject<Block> HorizontalTshapedPillar ;
+    public static final RegistryObject<Block> VerticalTshapedPillar ;
+    public static final RegistryObject<Block> VerticalTshapedPillarType2 ;
+    public static final RegistryObject<Block> RoadMastPillarBase ;
+    public static final RegistryObject<Block> RoadMastPillar;
+    public static final RegistryObject<Block> HorizontalStraightPillarThin ;
+    public static final RegistryObject<Block> VerticalStraightPillarThin ;
+    public static final RegistryObject<Block> VerticalCornerPillarThin;
+    public static final RegistryObject<Block> SmartPillar;
+    public static final RegistryObject<Block> SmartPillarThin;
 
-    public static  Block SignIndicatorDirectionLeft ;
-    public static  Block SignIndicatorDirectionRight;
-    public static  Block SignIndicatorDirectionCar ;
-    public static  Block SignIndicatorDirectionBicycle ;
-    public static  Block SignBanNoDrive ;
-    public static  Block SignBanStop;
-    public static  Block SignBanSpeedLimit05 ;
-    public static  Block SignBanSpeedLimit20 ;
-    public static  Block SignBanSpeedLimit30 ;
-    public static  Block SignBanSpeedLimit40 ;
-    public static  Block SignBanSpeedLimit50 ;
-    public static  Block SignBanSpeedLimit60 ;
-    public static  Block SignBanSpeedLimit70 ;
-    public static  Block SignBanSpeedLimit80 ;
+    public static final RegistryObject<Block> SignIndicatorDirectionLeft ;
+    public static final RegistryObject<Block> SignIndicatorDirectionRight;
+    public static final RegistryObject<Block> SignIndicatorDirectionCar ;
+    public static final RegistryObject<Block> SignIndicatorDirectionBicycle ;
+    public static final RegistryObject<Block> SignBanNoDrive ;
+    public static final RegistryObject<Block> SignBanStop;
+    public static final RegistryObject<Block> SignBanSpeedLimit05 ;
+    public static final RegistryObject<Block> SignBanSpeedLimit20 ;
+    public static final RegistryObject<Block> SignBanSpeedLimit30 ;
+    public static final RegistryObject<Block> SignBanSpeedLimit40 ;
+    public static final RegistryObject<Block> SignBanSpeedLimit50 ;
+    public static final RegistryObject<Block> SignBanSpeedLimit60 ;
+    public static final RegistryObject<Block> SignBanSpeedLimit70 ;
+    public static final RegistryObject<Block> SignBanSpeedLimit80 ;
 
-    public static  Block RubbishBinMetal;
-    public static  Block TrashBinGreen;
-    public static  Block RoadNameSign ;
+    public static final RegistryObject<Block> RubbishBinMetal;
+    public static final RegistryObject<Block> TrashBinGreen;
+    public static final RegistryObject<Block> RoadNameSign ;
 
     //misc
-    public static  Block LightSource;
+    // public static final RegistryObject<Block> LightSource;
 
 
     //方块实体
-    public static BlockEntityType<TrafficLightEntity> TRAFFIC_LIGHT_ENTITY;
-    public static BlockEntityType<TrafficLightPavementEntity> TRAFFIC_LIGHT_PAVEMENT_ENTITY;
-    public static BlockEntityType<RoadLightEntity>ROAD_LIGHT_ENTITY;
-    public static BlockEntityType<RoadNameSignEntity>ROAD_NAME_SIGN_ENTITY;
-    public static BlockEntityType<TrafficLightsControlEntity>TRAFFIC_LIGHTS_CONTROL_ENTITY;
+    public static final RegistryObject<BlockEntityType<TrafficLightEntity>> TRAFFIC_LIGHT_ENTITY;
+    public static final RegistryObject<BlockEntityType<TrafficLightPavementEntity>> TRAFFIC_LIGHT_PAVEMENT_ENTITY;
+    public static final RegistryObject<BlockEntityType<RoadLightEntity>> ROAD_LIGHT_ENTITY;
+    public static final RegistryObject<BlockEntityType<RoadNameSignEntity>> ROAD_NAME_SIGN_ENTITY;
+    public static final RegistryObject<BlockEntityType<TrafficLightsControlEntity>> TRAFFIC_LIGHTS_CONTROL_ENTITY;
 
 
-    public static void RegisterBlock(){
-        RoadBlock =register("road_block",new RoadFullBlock("road_block"));
-        RoadBlockConcrete =register("road_block_concrete",new RoadFullBlock("road_block"));
-        ManholeCover =register("manhole_cover",new RoadFullBlock("road_manhole_cover"));
-        ManholeCoverConcrete =register("manhole_cover_concrete",new RoadFullBlock("road_manhole_cover"));
-        RoadSeamsBlock =register("road_seams_block",new RoadFullBlock("road_seam"));
-        RoadSeamsBlockConcrete =register("road_seams_block_concrete",new RoadFullBlock("road_seam"));
-        ConcreteSlab =register("concrete_slab",new ConcreteSlab());
-        ConcreteStairs =register("concrete_stairs",new ConcreteStairs());
+    static {
+        BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, AFRoadsStatics.MOD_ID);
+        BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, AFRoadsStatics.MOD_ID);
+
+        RoadBlock = register("road_block", new RoadFullBlock("road_block"));
+        RoadBlockConcrete = register("road_block_concrete", new RoadFullBlock("road_block"));
+        ManholeCover = register("manhole_cover", new RoadFullBlock("road_manhole_cover"));
+        ManholeCoverConcrete = register("manhole_cover_concrete", new RoadFullBlock("road_manhole_cover"));
+        RoadSeamsBlock = register("road_seams_block", new RoadFullBlock("road_seam"));
+        RoadSeamsBlockConcrete = register("road_seams_block_concrete", new RoadFullBlock("road_seam"));
+        ConcreteSlab = register("concrete_slab", new ConcreteSlab());
+        ConcreteStairs = register("concrete_stairs", new ConcreteStairs());
         ConcreteStairsSmooth =register("concrete_stairs_smooth",new ConcreteStairs());
         ConcreteColumnsCorner =register("concrete_columns_corner",new ConcreteColumnsCorner());
         //创建划线贴纸
@@ -187,7 +197,7 @@ public class AFRoadsBlockRegistry {
         LineReversibleLanesFlip=register("line_reversible_lanes_flip",new LineBlocks());
         LineReversibleLanesDouble = register("line_reversible_lanes_double",new LineBlocks());
         //创建箭头贴纸
-        ArrowForward =register("arrow_forward",new ArrowBlocks());
+        ArrowForward = register("arrow_forward", new ArrowBlocks());
         ArrowLeft =register("arrow_left",new ArrowBlocks());
         ArrowRight =register("arrow_right",new ArrowBlocks());
         ArrowForwardLeft =register("arrow_forward_left",new ArrowBlocks());
@@ -199,7 +209,7 @@ public class AFRoadsBlockRegistry {
         ArrowConfluenceLeft =register("arrow_confluence_left",new ArrowBlocks());
         ArrowConfluenceRight =register("arrow_confluence_right",new ArrowBlocks());
         //创建图标贴纸
-        IconDecelerateSticker =register("icon_decelerate_sticker",new IconBlocks());
+        IconDecelerateSticker = register("icon_decelerate_sticker", new IconBlocks());
         IconStopSticker =register("icon_stop_sticker",new IconBlocks());
         IconGiverWaySticker =register("icon_give_way_sticker",new IconBlocks());
         //创建装饰方块
@@ -220,7 +230,7 @@ public class AFRoadsBlockRegistry {
 
         BarrierBar =register("barrier_bar",new BarrierBar());
         TrafficLightsControlBox =register("traffic_lights_control_box",new TrafficLightsControlBox());
-        TrafficLight =setPillarConnect(register("traffic_light",new TrafficLight()));
+        TrafficLight = setPillarConnect(register("traffic_light", new TrafficLight()));
         TrafficLightPavement =setPillarConnect(register("traffic_light_pavement",new TrafficLightPavement()));
         RoadLight =setPillarConnect(register("road_light",new RoadLight()));
 
@@ -259,14 +269,13 @@ public class AFRoadsBlockRegistry {
         TrashBinGreen =register("trash_bin_green",new TrashBinGreen());
         RoadNameSign =setPillarConnect(register("road_name_sign",new RoadNameSign()));
         //misc
-        //LightSource =register("light_source",new Block(FabricBlockSettings.of(Material.AIR).hardness(0.5f).luminance(15).noCollision().nonOpaque()));
+        //LightSource =register("light_source",new Block(BlockBehaviour.Properties.of(Material.AIR).hardness(0.5f).luminance(15).noCollision().noOcclusion()));
 
-        //注册方块实体
-        TRAFFIC_LIGHT_ENTITY = Registry.register(Registry.BLOCK_ENTITY_TYPE,new Identifier ("aft_fabroads:traffic_light_entity"), FabricBlockEntityTypeBuilder.create(TrafficLightEntity::new,TrafficLight).build(null));
-        TRAFFIC_LIGHT_PAVEMENT_ENTITY = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier("aft_fabroads:traffic_light_pavement_entity"), FabricBlockEntityTypeBuilder.create(TrafficLightPavementEntity::new,TrafficLightPavement).build(null));
-        ROAD_LIGHT_ENTITY = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier("aft_fabroads:road_light_entity"), FabricBlockEntityTypeBuilder.create(RoadLightEntity::new,RoadLight).build(null));
-        ROAD_NAME_SIGN_ENTITY = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier("aft_fabroads:road_name_sign_entity"), FabricBlockEntityTypeBuilder.create(RoadNameSignEntity::new,RoadNameSign).build(null));
-        TRAFFIC_LIGHTS_CONTROL_ENTITY=Registry.register(Registry.BLOCK_ENTITY_TYPE,new Identifier("aft_fabroads:traffic_lights_control_entity"),FabricBlockEntityTypeBuilder.create(TrafficLightsControlEntity::new,TrafficLightsControlBox).build(null));
+        TRAFFIC_LIGHT_ENTITY = register(TrafficLightEntity::new, TrafficLight);
+        TRAFFIC_LIGHT_PAVEMENT_ENTITY = register(TrafficLightPavementEntity::new, TrafficLightPavement);
+        ROAD_LIGHT_ENTITY = register(RoadLightEntity::new, RoadLight);
+        ROAD_NAME_SIGN_ENTITY = register(RoadNameSignEntity::new, RoadNameSign);
+        TRAFFIC_LIGHTS_CONTROL_ENTITY = register(TrafficLightsControlEntity::new, TrafficLightsControlBox);
 
         AFRoads.LOGGER.info("AFRoads Blocks Initialized");
     }

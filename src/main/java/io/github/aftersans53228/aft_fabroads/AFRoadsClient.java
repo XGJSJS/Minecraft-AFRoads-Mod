@@ -1,211 +1,146 @@
 package io.github.aftersans53228.aft_fabroads;
 
-import com.sun.jna.StringArray;
-import io.github.aftersans53228.aft_fabroads.block.RoadNameSignEntity;
-import io.github.aftersans53228.aft_fabroads.block.TrafficLightsControlEntity;
-import io.github.aftersans53228.aft_fabroads.gui.RoadNameSignGui;
-import io.github.aftersans53228.aft_fabroads.gui.TrafficControlBoxGui;
-import io.github.aftersans53228.aft_fabroads.item.RoadToolAttribute;
-import io.github.aftersans53228.aft_fabroads.network.OnConnectingVersionCheck;
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry;
 import io.github.aftersans53228.aft_fabroads.render.RoadLightEntityRender;
 import io.github.aftersans53228.aft_fabroads.render.RoadNameSignEntityRender;
 import io.github.aftersans53228.aft_fabroads.render.TrafficLightEntityRender;
 import io.github.aftersans53228.aft_fabroads.render.TrafficLightPavementEntityRender;
-import io.github.cottonmc.cotton.gui.client.CottonClientScreen;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.world.level.block.Block;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fmllegacy.RegistryObject;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-
-import static io.github.aftersans53228.aft_fabroads.AFRoadsStatics.MOD_ID;
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry.*;
 
 /**
- * @author Aftersans53228
+ * @author Aftersans53228, XGJS
  * Mod Client Main Class
  */
-@Environment(EnvType.CLIENT)
-public class AFRoadsClient implements ClientModInitializer {
-    public static void registerNetworkReceiver(Identifier id, Consumer<PacketByteBuf> consumer) {
-        ClientPlayNetworking.registerGlobalReceiver(id, (client, handler, packet, responseSender) -> consumer.accept(packet));
-    }
-
-
-    @Override
+@OnlyIn(Dist.CLIENT)
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public class AFRoadsClient {
     @SuppressWarnings("all")
-    public void onInitializeClient() {
+    @SubscribeEvent
+    public static void onInitializeClient(FMLClientSetupEvent event) {
         //client Initialize
-        // 如果有半透明纹理，可以将 RenderLayer.getCutout() 替换为 RenderLayer.getTranslucent()。
+        // 如果有半透明纹理，可以将 renderType -> renderType == RenderType.cutout() 替换为 RenderLayer.getTranslucent()。
         //普通方块
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadBlock, RenderLayer.getCutoutMipped());
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadBlockConcrete, RenderLayer.getCutoutMipped());
-        BlockRenderLayerMap.INSTANCE.putBlock(ManholeCover, RenderLayer.getCutoutMipped());
-        BlockRenderLayerMap.INSTANCE.putBlock(ManholeCoverConcrete, RenderLayer.getCutoutMipped());
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadSeamsBlock, RenderLayer.getCutoutMipped());
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadSeamsBlockConcrete, RenderLayer.getCutoutMipped());
-        BlockRenderLayerMap.INSTANCE.putBlock(ConcreteSlab, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ConcreteStairs, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ConcreteStairsSmooth, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ConcreteColumnsCorner, RenderLayer.getCutout());
+        setRenderLayer(RoadBlock, RenderType.cutoutMipped());
+        setRenderLayer(RoadBlockConcrete, RenderType.cutoutMipped());
+        setRenderLayer(ManholeCover, RenderType.cutoutMipped());
+        setRenderLayer(ManholeCoverConcrete, RenderType.cutoutMipped());
+        setRenderLayer(RoadSeamsBlock, RenderType.cutoutMipped());
+        setRenderLayer(RoadSeamsBlockConcrete, RenderType.cutoutMipped());
+        setRenderLayer(ConcreteSlab, RenderType.cutout());
+        setRenderLayer(ConcreteStairs, RenderType.cutout());
+        setRenderLayer(ConcreteStairsSmooth, RenderType.cutout());
+        setRenderLayer(ConcreteColumnsCorner, RenderType.cutout());
         //地面划线
-        BlockRenderLayerMap.INSTANCE.putBlock(LineStraight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineCorner, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineTshaped, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineCross, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineDiagonal, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineLeftBend, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineRightBend, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineForkLeft, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineForkRight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineStraightThick, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineStraightDuoLine, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineStraightDuoThick, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineStraightDuoThickDashed, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineDecelerateNoLine, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineDecelerateNoLineFlip, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineDecelerateWithLine, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineDecelerateWithLineFlip, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineDecelerateDoubleWL, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineDecelerateDoubleNL, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineReversibleLanes, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineReversibleLanesFlip, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(LineReversibleLanesDouble, RenderLayer.getCutout());
+        setRenderLayer(LineStraight, RenderType.cutout());
+        setRenderLayer(LineCorner, RenderType.cutout());
+        setRenderLayer(LineTshaped, RenderType.cutout());
+        setRenderLayer(LineCross, RenderType.cutout());
+        setRenderLayer(LineDiagonal, RenderType.cutout());
+        setRenderLayer(LineLeftBend, RenderType.cutout());
+        setRenderLayer(LineRightBend, RenderType.cutout());
+        setRenderLayer(LineForkLeft, RenderType.cutout());
+        setRenderLayer(LineForkRight, RenderType.cutout());
+        setRenderLayer(LineStraightThick, RenderType.cutout());
+        setRenderLayer(LineStraightDuoLine, RenderType.cutout());
+        setRenderLayer(LineStraightDuoThick, RenderType.cutout());
+        setRenderLayer(LineStraightDuoThickDashed, RenderType.cutout());
+        setRenderLayer(LineDecelerateNoLine, RenderType.cutout());
+        setRenderLayer(LineDecelerateNoLineFlip, RenderType.cutout());
+        setRenderLayer(LineDecelerateWithLine, RenderType.cutout());
+        setRenderLayer(LineDecelerateWithLineFlip, RenderType.cutout());
+        setRenderLayer(LineDecelerateDoubleWL, RenderType.cutout());
+        setRenderLayer(LineDecelerateDoubleNL, RenderType.cutout());
+        setRenderLayer(LineReversibleLanes, RenderType.cutout());
+        setRenderLayer(LineReversibleLanesFlip, RenderType.cutout());
+        setRenderLayer(LineReversibleLanesDouble, RenderType.cutout());
         //地面箭头
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowForward, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowLeft, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowRight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowForwardLeft, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowForwardRight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowBack, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowLeftRight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowBackLeft, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowBackForward, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowConfluenceLeft, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ArrowConfluenceRight, RenderLayer.getCutout());
+        setRenderLayer(ArrowForward, RenderType.cutout());
+        setRenderLayer(ArrowLeft, RenderType.cutout());
+        setRenderLayer(ArrowRight, RenderType.cutout());
+        setRenderLayer(ArrowForwardLeft, RenderType.cutout());
+        setRenderLayer(ArrowForwardRight, RenderType.cutout());
+        setRenderLayer(ArrowBack, RenderType.cutout());
+        setRenderLayer(ArrowLeftRight, RenderType.cutout());
+        setRenderLayer(ArrowBackLeft, RenderType.cutout());
+        setRenderLayer(ArrowBackForward, RenderType.cutout());
+        setRenderLayer(ArrowConfluenceLeft, RenderType.cutout());
+        setRenderLayer(ArrowConfluenceRight, RenderType.cutout());
         //地面图标
-        BlockRenderLayerMap.INSTANCE.putBlock(IconDecelerateSticker, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(IconStopSticker, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(IconGiverWaySticker, RenderLayer.getCutout());
+        setRenderLayer(IconDecelerateSticker, RenderType.cutout());
+        setRenderLayer(IconStopSticker, RenderType.cutout());
+        setRenderLayer(IconGiverWaySticker, RenderType.cutout());
         //道路装饰
-        BlockRenderLayerMap.INSTANCE.putBlock(Railings, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(BarrierBar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(PavementRailings, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ExpresswayRailingsBase, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ExpresswayIronRailings, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ExpresswayIronRailings2, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ExpresswayRailings, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(ExpresswayRailingsType2, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(InsulationPanelsRailings, RenderLayer.getTranslucent());
-        BlockRenderLayerMap.INSTANCE.putBlock(InsulationPanelsGrayPart1, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(InsulationPanelsGrayPart2, RenderLayer.getTranslucent());
-        BlockRenderLayerMap.INSTANCE.putBlock(InsulationPanelsGrayPart3, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(InsulationPanelsGrayPart4, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(InsulationPanelsGrayPart5, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(InsulationPanelsGrayPart6, RenderLayer.getTranslucent());
-        BlockRenderLayerMap.INSTANCE.putBlock(TrafficLightsControlBox, RenderLayer.getCutoutMipped());
-        BlockRenderLayerMap.INSTANCE.putBlock(TrafficLight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(TrafficLightPavement, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadLight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(PillarBase, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(HorizontalStraightPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(VerticalStraightPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(VerticalCornerPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(HorizontalCornerPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(VerticalTshapedPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(VerticalTshapedPillarType2, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(HorizontalTshapedPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(HorizontalStraightPillarThin, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(VerticalStraightPillarThin, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(VerticalCornerPillarThin, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadMastPillarBase, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadMastPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SmartPillar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SmartPillarThin, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignIndicatorDirectionLeft, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignIndicatorDirectionRight, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignIndicatorDirectionCar, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignIndicatorDirectionBicycle, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanNoDrive, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanStop, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit05, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit20, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit30, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit40, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit50, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit60, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit70, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(SignBanSpeedLimit80, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(RubbishBinMetal, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(TrashBinGreen, RenderLayer.getCutout());
-        BlockRenderLayerMap.INSTANCE.putBlock(RoadNameSign, RenderLayer.getCutout());
+        setRenderLayer(Railings, RenderType.cutout());
+        setRenderLayer(BarrierBar, RenderType.cutout());
+        setRenderLayer(PavementRailings, RenderType.cutout());
+        setRenderLayer(ExpresswayRailingsBase, RenderType.cutout());
+        setRenderLayer(ExpresswayIronRailings, RenderType.cutout());
+        setRenderLayer(ExpresswayIronRailings2, RenderType.cutout());
+        setRenderLayer(ExpresswayRailings, RenderType.cutout());
+        setRenderLayer(ExpresswayRailingsType2, RenderType.cutout());
+        setRenderLayer(InsulationPanelsRailings, RenderType.translucent());
+        setRenderLayer(InsulationPanelsGrayPart1, RenderType.cutout());
+        setRenderLayer(InsulationPanelsGrayPart2, RenderType.translucent());
+        setRenderLayer(InsulationPanelsGrayPart3, RenderType.cutout());
+        setRenderLayer(InsulationPanelsGrayPart4, RenderType.cutout());
+        setRenderLayer(InsulationPanelsGrayPart5, RenderType.cutout());
+        setRenderLayer(InsulationPanelsGrayPart6, RenderType.translucent());
+        setRenderLayer(TrafficLightsControlBox, RenderType.cutoutMipped());
+        setRenderLayer(TrafficLight, RenderType.cutout());
+        setRenderLayer(TrafficLightPavement, RenderType.cutout());
+        setRenderLayer(RoadLight, RenderType.cutout());
+        setRenderLayer(PillarBase, RenderType.cutout());
+        setRenderLayer(HorizontalStraightPillar, RenderType.cutout());
+        setRenderLayer(VerticalStraightPillar, RenderType.cutout());
+        setRenderLayer(VerticalCornerPillar, RenderType.cutout());
+        setRenderLayer(HorizontalCornerPillar, RenderType.cutout());
+        setRenderLayer(VerticalTshapedPillar, RenderType.cutout());
+        setRenderLayer(VerticalTshapedPillarType2, RenderType.cutout());
+        setRenderLayer(HorizontalTshapedPillar, RenderType.cutout());
+        setRenderLayer(HorizontalStraightPillarThin, RenderType.cutout());
+        setRenderLayer(VerticalStraightPillarThin, RenderType.cutout());
+        setRenderLayer(VerticalCornerPillarThin, RenderType.cutout());
+        setRenderLayer(RoadMastPillarBase, RenderType.cutout());
+        setRenderLayer(RoadMastPillar, RenderType.cutout());
+        setRenderLayer(SmartPillar, RenderType.cutout());
+        setRenderLayer(SmartPillarThin, RenderType.cutout());
+        setRenderLayer(SignIndicatorDirectionLeft, RenderType.cutout());
+        setRenderLayer(SignIndicatorDirectionRight, RenderType.cutout());
+        setRenderLayer(SignIndicatorDirectionCar, RenderType.cutout());
+        setRenderLayer(SignIndicatorDirectionBicycle, RenderType.cutout());
+        setRenderLayer(SignBanNoDrive, RenderType.cutout());
+        setRenderLayer(SignBanStop, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit05, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit20, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit30, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit40, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit50, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit60, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit70, RenderType.cutout());
+        setRenderLayer(SignBanSpeedLimit80, RenderType.cutout());
+        setRenderLayer(RubbishBinMetal, RenderType.cutout());
+        setRenderLayer(TrashBinGreen, RenderType.cutout());
+        setRenderLayer(RoadNameSign, RenderType.cutout());
 
         //注册方块实体渲染
-        BlockEntityRendererRegistry.register(AFRoadsBlockRegistry.TRAFFIC_LIGHT_ENTITY, TrafficLightEntityRender::new);
-        BlockEntityRendererRegistry.register(AFRoadsBlockRegistry.TRAFFIC_LIGHT_PAVEMENT_ENTITY, TrafficLightPavementEntityRender::new);
-        BlockEntityRendererRegistry.register(AFRoadsBlockRegistry.ROAD_LIGHT_ENTITY, RoadLightEntityRender::new);
-        BlockEntityRendererRegistry.register(AFRoadsBlockRegistry.ROAD_NAME_SIGN_ENTITY, RoadNameSignEntityRender::new);
+        BlockEntityRenderers.register(AFRoadsBlockRegistry.TRAFFIC_LIGHT_ENTITY.get(), TrafficLightEntityRender::new);
+        BlockEntityRenderers.register(AFRoadsBlockRegistry.TRAFFIC_LIGHT_PAVEMENT_ENTITY.get(), TrafficLightPavementEntityRender::new);
+        BlockEntityRenderers.register(AFRoadsBlockRegistry.ROAD_LIGHT_ENTITY.get(), RoadLightEntityRender::new);
+        BlockEntityRenderers.register(AFRoadsBlockRegistry.ROAD_NAME_SIGN_ENTITY.get(), RoadNameSignEntityRender::new);
+    }
 
-        //gui
-        ClientPlayNetworking.registerGlobalReceiver( new Identifier("aft_fabroads:road_name_sign_gui_open"), (client, handler, buf, responseSender) -> {
-            BlockPos roadNameSignPos = buf.readBlockPos();
-            client.execute(() -> {
-                RoadNameSignEntity entity=(RoadNameSignEntity) client.world.getBlockEntity(roadNameSignPos);
-                List<String> roadNames = entity.getRoadNames();
-                // 此 lambda 中的所有内容都在渲染线程上运行
-                client.setScreen(new CottonClientScreen(new RoadNameSignGui(roadNameSignPos,roadNames,client.world)));
-                AFRoads.LOGGER.info("Open the\"Road Name Sign\"'s gui. ");
-            });
-        });
-        ClientPlayNetworking.registerGlobalReceiver( new Identifier("aft_fabroads:traffic_control_box_gui_open"), (client, handler, buf, responseSender) -> {
-            BlockPos controlBoxPos = buf.readBlockPos();
-            client.execute(() -> {
-                ArrayList<Integer> timeData=new ArrayList<>();
-                TrafficLightsControlEntity entity=(TrafficLightsControlEntity)client.world.getBlockEntity(controlBoxPos);
-                timeData = entity.getTimerData();
-                // 此 lambda 中的所有内容都在渲染线程上运行
-                client.setScreen(new CottonClientScreen(new TrafficControlBoxGui(controlBoxPos,client.world.getBlockState(controlBoxPos).get(BooleanProperty.of("is_enable")),timeData)));
-                    AFRoads.LOGGER.info("Open the\"Traffic Control Box\"'s gui. ");
-            });
-        });
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(MOD_ID,"disconnect_self"),((client, handler, buf, responseSender) -> {
-            client.execute(()->{
-                ClientConnection connection = client.getNetworkHandler().getConnection();
-                if (connection !=null){
-                    connection.disconnect(
-                        new LiteralText(
-                        I18n.translate("text.gui.aft_fabroads.version_mistake")+"\n\n"
-                                +I18n.translate("text.gui.aft_fabroads.version_mistake_client")+"§4"+"AFRoadsStatics.MOD_VERSION(Client)\n"
-                                +I18n.translate("text.gui.aft_fabroads.version_mistake_server")+"§2"+"AFRoadsStatics.MOD_VERSION(Server)\n"
-                                +"§f(The operator self-disconnected.)")
-                    );
-                };
-            });
-        }));
-
-        registerNetworkReceiver(new Identifier(MOD_ID,"version_check"),OnConnectingVersionCheck::receiveVersionCheck);
-
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(MOD_ID,"attributes_item_required"),((client, handler, buf, responseSender) -> {
-            String s1 = buf.readString();
-            String s2 = buf.readString();
-            client.execute(() -> {
-                RoadToolAttribute.receiveAttributeItem(s1,s2, client.player);
-            });
-        }));
-
+    private static void setRenderLayer(RegistryObject<Block> block, RenderType renderType) {
+        ItemBlockRenderTypes.setRenderLayer(block.get(), render_Type -> render_Type == renderType);
     }
 }

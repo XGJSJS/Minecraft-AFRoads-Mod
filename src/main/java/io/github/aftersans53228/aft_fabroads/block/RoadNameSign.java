@@ -2,96 +2,81 @@ package io.github.aftersans53228.aft_fabroads.block;
 
 import io.github.aftersans53228.aft_fabroads.AFRoads;
 import io.github.aftersans53228.aft_fabroads.block.voxelshapes.Rns;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.*;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import io.github.aftersans53228.aft_fabroads.network.GuiOpenMessage;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraftforge.fmllegacy.network.NetworkDirection;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry.RoadTool;
 
-public  class RoadNameSign extends BlockWithEntity implements BlockEntityProvider {
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
-    public static final BooleanProperty DirLeft = BooleanProperty.of("dir_left");
-    public static final BooleanProperty DirRight = BooleanProperty.of("dir_right");
+public  class RoadNameSign extends AbstractHorizontalDirectionalEntityBlock {
+    public static final BooleanProperty DirLeft = BooleanProperty.create("dir_left");
+    public static final BooleanProperty DirRight = BooleanProperty.create("dir_right");
 
-
-    public RoadNameSign(){
-        super(FabricBlockSettings.of(Material.METAL).hardness(1.5f).nonOpaque());
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
-        setDefaultState(getStateManager().getDefaultState().with(DirLeft, true));
-        setDefaultState(getStateManager().getDefaultState().with(DirRight, true));
+    public RoadNameSign() {
+        super(BlockBehaviour.Properties.of(Material.METAL).strength(1.5f).noOcclusion());
+        this.registerDefaultState(this.defaultBlockState().setValue(DirLeft, true).setValue(DirRight, true));
     }
+
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
-        stateManager.add(Properties.HORIZONTAL_FACING);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateManager) {
+        super.createBlockStateDefinition(stateManager);
         stateManager.add(DirLeft);
         stateManager.add(DirRight);
     }
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!world.isClient() && player.getMainHandStack().getItem()== RoadTool) {
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeBlockPos(pos);
-            ServerPlayNetworking.send((ServerPlayerEntity) player, new Identifier("aft_fabroads:road_name_sign_gui_open"), buf);
-            return ActionResult.SUCCESS;
+
+    @Override
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!world.isClientSide() && player.getMainHandItem().getItem()== RoadTool.get()) {
+            AFRoads.CHANNEL.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayer) player)), new GuiOpenMessage(pos, (byte) 0));
+            return InteractionResult.SUCCESS;
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext ctx) {
-        Direction dir = state.get(FACING);
-        switch(dir) {
-            case NORTH:
-            case SOUTH:
-                return Rns.getRnsNS();
-            case WEST:
-            case EAST:
-                return Rns.getRnsWE();
-            default:
-                return VoxelShapes.fullCube();
-        }
-    }
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return (BlockState)this.getDefaultState().with(FACING, ctx.getPlayerFacing());
-    }
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return (BlockState)state.with(FACING, rotation.rotate(state.get(FACING)));
-    }
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
-    }
-    public void appendTooltip(ItemStack itemStack, BlockView world, List<Text> tooltip, TooltipContext tooltipContext) {
-        tooltip.add(new TranslatableText("item.aft_fabroads.road_name_sign"));
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
+        Direction dir = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        return switch (dir) {
+            case NORTH, SOUTH -> Rns.getRnsNS();
+            case WEST, EAST -> Rns.getRnsWE();
+            default -> Shapes.block();
+        };
     }
 
+    @Override
+    public void appendHoverText(ItemStack p_49816_, @Nullable BlockGetter p_49817_, List<Component> tooltip, TooltipFlag p_49819_) {
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.road_name_sign"));
+    }
 
-
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new RoadNameSignEntity(pos, state);
-    }
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
     }
 }

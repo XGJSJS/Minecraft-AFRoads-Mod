@@ -1,67 +1,76 @@
 package io.github.aftersans53228.aft_fabroads.block.stickerblock;
 
-import io.github.aftersans53228.aft_fabroads.AFRoads;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.*;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry.RoadTool;
 
-public class ArrowBlocks extends HorizontalFacingBlock {
-    public static final BooleanProperty is_Mini = BooleanProperty.of("is_mini");
+public class ArrowBlocks extends HorizontalDirectionalBlock {
+    public static final BooleanProperty is_Mini = BooleanProperty.create("is_mini");
     public ArrowBlocks() {
-        super(FabricBlockSettings.of(Material.STONE).hardness(0.1f).nonOpaque());
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
-        setDefaultState(getStateManager().getDefaultState().with(is_Mini, false));
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(0.1f).noOcclusion());
+        this.registerDefaultState(this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH).setValue(is_Mini, false));
     }
+
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState>stateManager) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateManager) {
         stateManager.add(is_Mini);
-        stateManager.add(Properties.HORIZONTAL_FACING);
+        stateManager.add(BlockStateProperties.HORIZONTAL_FACING);
     }
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (player.getMainHandStack().getItem()== RoadTool){
-            if (state.get(is_Mini)) {
-                world.setBlockState(pos, state.with(is_Mini, false));
+
+    @Override
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (player.getMainHandItem().getItem()== RoadTool.get()) {
+            if (state.getValue(is_Mini)) {
+                world.setBlock(pos, state.setValue(is_Mini, false), Block.UPDATE_ALL);
             } else {
-                world.setBlockState(pos, state.with(is_Mini, true));
+                world.setBlock(pos, state.setValue(is_Mini, true), Block.UPDATE_ALL);
             }
         }
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        if (state.get(is_Mini)) {
-            return VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 1f, 0.00500f, 1.0f);
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
+        if (state.getValue(is_Mini)) {
+            return Shapes.box(0.0f, 0.0f, 0.0f, 1f, 0.00500f, 1.0f);
         } else {
-            return VoxelShapes.cuboid(-1.0f, 0.0f, -1.0f, 2.0f, 0.00500f, 2.0f);
+            return Shapes.box(-1.0f, 0.0f, -1.0f, 2.0f, 0.00500f, 2.0f);
         }
     }
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getDefaultState().with(FACING, ctx.getPlayerFacing());
-    }
-    public void appendTooltip(ItemStack itemStack, BlockView world, List<Text> tooltip, TooltipContext tooltipContext) {
-        tooltip.add(new TranslatableText("item.aft_fabroads.arrow_tip"));
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        return this.defaultBlockState().setValue(FACING, ctx.getHorizontalDirection());
     }
 
-
+    @Override
+    public void appendHoverText(ItemStack itemStack, @Nullable BlockGetter p_49817_, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.arrow_tip"));
+    }
 }

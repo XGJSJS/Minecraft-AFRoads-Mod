@@ -1,38 +1,42 @@
 package io.github.aftersans53228.aft_fabroads.block.structureblock;
 
 import io.github.aftersans53228.aft_fabroads.AFRoads;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.*;
-import net.minecraft.block.enums.SlabType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
 
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry.RoadTool;
 
 public class ConcreteSlab extends SlabBlock {
     public ConcreteSlab() {
-        super(FabricBlockSettings.of(Material.STONE).hardness(1.8f).nonOpaque());
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.8f).noOcclusion());
     }
+
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (player.getMainHandStack().getItem()== RoadTool){
-            if (state.get(TYPE) == SlabType.BOTTOM) {
-                world.setBlockState(pos, state.with(TYPE, SlabType.TOP));
-                return ActionResult.SUCCESS;
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (player.getMainHandItem().getItem()== RoadTool.get()) {
+            if (state.getValue(TYPE) == SlabType.BOTTOM) {
+                world.setBlock(pos, state.setValue(TYPE, SlabType.TOP), Block.UPDATE_ALL);
+                return InteractionResult.SUCCESS;
             }
-            if (state.get(TYPE) == SlabType.TOP) {
-                world.setBlockState(pos, state.with(TYPE, SlabType.BOTTOM));
-                return ActionResult.SUCCESS;
+            if (state.getValue(TYPE) == SlabType.TOP) {
+                world.setBlock(pos, state.setValue(TYPE, SlabType.BOTTOM), Block.UPDATE_ALL);
+                return InteractionResult.SUCCESS;
             }
-            if (state.get(TYPE) == SlabType.DOUBLE) {
-                player.sendMessage(new TranslatableText("item.aft_fabroads.tool2slab_tip"), true);
+            if (state.getValue(TYPE) == SlabType.DOUBLE) {
+                player.displayClientMessage(new TranslatableComponent("item.aft_fabroads.tool2slab_tip"), true);
             }
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 }

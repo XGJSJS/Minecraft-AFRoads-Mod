@@ -1,153 +1,158 @@
 package io.github.aftersans53228.aft_fabroads.block;
 
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry.RoadTool;
 
-public  class TrafficLight extends BlockWithEntity implements BlockEntityProvider {
-    public static final BooleanProperty hasTimer = BooleanProperty.of("has_timer");
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+public  class TrafficLight extends BaseEntityBlock {
+    public static final BooleanProperty hasTimer = BooleanProperty.create("has_timer");
 
-
-    public TrafficLight(){
-        super(FabricBlockSettings.of(Material.STONE).hardness(1.5f).nonOpaque().luminance(3));
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
-        setDefaultState(getStateManager().getDefaultState().with(hasTimer,false));
+    public TrafficLight() {
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f).noOcclusion().lightLevel(state -> 3));
+        this.registerDefaultState(this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH).setValue(hasTimer, false));
     }
+
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
-        stateManager.add(Properties.HORIZONTAL_FACING);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateManager) {
+        stateManager.add(BlockStateProperties.HORIZONTAL_FACING);
         stateManager.add(hasTimer);
     }
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (player.getMainHandStack().getItem()== RoadTool ){
-            world.setBlockState(pos, state.with(hasTimer, !state.get(hasTimer)));
-            return ActionResult.SUCCESS;
+
+    @Override
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (player.getMainHandItem().getItem() == RoadTool.get()) {
+            world.setBlock(pos, state.setValue(hasTimer, !state.getValue(hasTimer)), Block.UPDATE_ALL);
+            return InteractionResult.SUCCESS;
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext ctx) {
-        Direction dir = state.get(FACING);
-        switch(dir) {
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
+        Direction dir = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        VoxelShape shape = Shapes.empty();
+        switch (dir) {
             case NORTH:
-                VoxelShape shape = VoxelShapes.empty();
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.8125, 0.3125, 0.6875, 1.1875, 0.375));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.4375, 0.3125, 0.6875, 0.8125, 0.375));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.125, 0.3125, 0.6875, 0.4375, 0.375));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.1875, 0, 0.1875, 0.8125, 1.3125, 0.3125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 1.15625, 0.3125, 0.6875, 1.20625, 0.5625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.8125, 0.375, 0.6875, 0.8625, 0.5625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.45625, 0.375, 0.6875, 0.50625, 0.5625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.875, 0.375, 0.625, 1.125, 0.38125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.5375, 0.375, 0.625, 0.7875, 0.38125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.1875, 0.375, 0.625, 0.4375, 0.38125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.4375, 0.4375, 0, 0.5625, 0.5625, 0.1875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.25, 0.0625, 0.3125, 0.3125, 1.1875, 0.4375));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.6875, 0.0625, 0.3125, 0.75, 1.1875, 0.4375));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.8125, 0.3125, 0.6875, 1.1875, 0.375));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.4375, 0.3125, 0.6875, 0.8125, 0.375));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.125, 0.3125, 0.6875, 0.4375, 0.375));
+                shape = Shapes.or(shape, Shapes.box(0.1875, 0, 0.1875, 0.8125, 1.3125, 0.3125));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 1.15625, 0.3125, 0.6875, 1.20625, 0.5625));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.8125, 0.375, 0.6875, 0.8625, 0.5625));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.45625, 0.375, 0.6875, 0.50625, 0.5625));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.875, 0.375, 0.625, 1.125, 0.38125));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.5375, 0.375, 0.625, 0.7875, 0.38125));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.1875, 0.375, 0.625, 0.4375, 0.38125));
+                shape = Shapes.or(shape, Shapes.box(0.4375, 0.4375, 0, 0.5625, 0.5625, 0.1875));
+                shape = Shapes.or(shape, Shapes.box(0.25, 0.0625, 0.3125, 0.3125, 1.1875, 0.4375));
+                shape = Shapes.or(shape, Shapes.box(0.6875, 0.0625, 0.3125, 0.75, 1.1875, 0.4375));
                 return shape;
             case SOUTH:
-                shape = VoxelShapes.empty();
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.8125, 0.625, 0.6875, 1.1875, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.4375, 0.625, 0.6875, 0.8125, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.125, 0.625, 0.6875, 0.4375, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.1875, 0, 0.6875, 0.8125, 1.3125, 0.8125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 1.15625, 0.4375, 0.6875, 1.20625, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.8125, 0.4375, 0.6875, 0.8625, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.45625, 0.4375, 0.6875, 0.50625, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.875, 0.61875, 0.625, 1.125, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.5375, 0.61875, 0.625, 0.7875, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.1875, 0.61875, 0.625, 0.4375, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.4375, 0.4375, 0.8125, 0.5625, 0.5625, 1));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.6875, 0.0625, 0.5625, 0.75, 1.1875, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.25, 0.0625, 0.5625, 0.3125, 1.1875, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.8125, 0.625, 0.6875, 1.1875, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.4375, 0.625, 0.6875, 0.8125, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.125, 0.625, 0.6875, 0.4375, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.1875, 0, 0.6875, 0.8125, 1.3125, 0.8125));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 1.15625, 0.4375, 0.6875, 1.20625, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.8125, 0.4375, 0.6875, 0.8625, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.45625, 0.4375, 0.6875, 0.50625, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.875, 0.61875, 0.625, 1.125, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.5375, 0.61875, 0.625, 0.7875, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.1875, 0.61875, 0.625, 0.4375, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.4375, 0.4375, 0.8125, 0.5625, 0.5625, 1));
+                shape = Shapes.or(shape, Shapes.box(0.6875, 0.0625, 0.5625, 0.75, 1.1875, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.25, 0.0625, 0.5625, 0.3125, 1.1875, 0.6875));
                 return shape;
             case EAST:
-                shape = VoxelShapes.empty();
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.625, 0.8125, 0.3125, 0.6875, 1.1875, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.625, 0.4375, 0.3125, 0.6875, 0.8125, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.625, 0.125, 0.3125, 0.6875, 0.4375, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.6875, 0, 0.1875, 0.8125, 1.3125, 0.8125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.4375, 1.15625, 0.3125, 0.6875, 1.20625, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.4375, 0.8125, 0.3125, 0.625, 0.8625, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.4375, 0.45625, 0.3125, 0.625, 0.50625, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.61875, 0.875, 0.375, 0.625, 1.125, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.61875, 0.5375, 0.375, 0.625, 0.7875, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.61875, 0.1875, 0.375, 0.625, 0.4375, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.8125, 0.4375, 0.4375, 1, 0.5625, 0.5625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.5625, 0.0625, 0.25, 0.6875, 1.1875, 0.3125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.5625, 0.0625, 0.6875, 0.6875, 1.1875, 0.75));
+                shape = Shapes.or(shape, Shapes.box(0.625, 0.8125, 0.3125, 0.6875, 1.1875, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.625, 0.4375, 0.3125, 0.6875, 0.8125, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.625, 0.125, 0.3125, 0.6875, 0.4375, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.6875, 0, 0.1875, 0.8125, 1.3125, 0.8125));
+                shape = Shapes.or(shape, Shapes.box(0.4375, 1.15625, 0.3125, 0.6875, 1.20625, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.4375, 0.8125, 0.3125, 0.625, 0.8625, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.4375, 0.45625, 0.3125, 0.625, 0.50625, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.61875, 0.875, 0.375, 0.625, 1.125, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.61875, 0.5375, 0.375, 0.625, 0.7875, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.61875, 0.1875, 0.375, 0.625, 0.4375, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.8125, 0.4375, 0.4375, 1, 0.5625, 0.5625));
+                shape = Shapes.or(shape, Shapes.box(0.5625, 0.0625, 0.25, 0.6875, 1.1875, 0.3125));
+                shape = Shapes.or(shape, Shapes.box(0.5625, 0.0625, 0.6875, 0.6875, 1.1875, 0.75));
                 return shape;
             case WEST:
-                shape = VoxelShapes.empty();
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.8125, 0.3125, 0.375, 1.1875, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.4375, 0.3125, 0.375, 0.8125, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.125, 0.3125, 0.375, 0.4375, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.1875, 0, 0.1875, 0.3125, 1.3125, 0.8125));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 1.15625, 0.3125, 0.5625, 1.20625, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.8125, 0.3125, 0.5625, 0.8625, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.45625, 0.3125, 0.5625, 0.50625, 0.6875));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.875, 0.375, 0.38125, 1.125, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.5375, 0.375, 0.38125, 0.7875, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.375, 0.1875, 0.375, 0.38125, 0.4375, 0.625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0, 0.4375, 0.4375, 0.1875, 0.5625, 0.5625));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.0625, 0.6875, 0.4375, 1.1875, 0.75));
-                shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0.3125, 0.0625, 0.25, 0.4375, 1.1875, 0.3125));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.8125, 0.3125, 0.375, 1.1875, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.4375, 0.3125, 0.375, 0.8125, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.125, 0.3125, 0.375, 0.4375, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.1875, 0, 0.1875, 0.3125, 1.3125, 0.8125));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 1.15625, 0.3125, 0.5625, 1.20625, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.8125, 0.3125, 0.5625, 0.8625, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.45625, 0.3125, 0.5625, 0.50625, 0.6875));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.875, 0.375, 0.38125, 1.125, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.5375, 0.375, 0.38125, 0.7875, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0.375, 0.1875, 0.375, 0.38125, 0.4375, 0.625));
+                shape = Shapes.or(shape, Shapes.box(0, 0.4375, 0.4375, 0.1875, 0.5625, 0.5625));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.0625, 0.6875, 0.4375, 1.1875, 0.75));
+                shape = Shapes.or(shape, Shapes.box(0.3125, 0.0625, 0.25, 0.4375, 1.1875, 0.3125));
                 return shape;
             default:
-                return VoxelShapes.fullCube();
+                return Shapes.block();
         }
     }
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return (BlockState)this.getDefaultState().with(FACING, ctx.getPlayerFacing());
-    }
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return (BlockState)state.with(FACING, rotation.rotate(state.get(FACING)));
-    }
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
-    }
-    public void appendTooltip(ItemStack itemStack, BlockView world, List<Text> tooltip, TooltipContext tooltipContext) {
-        tooltip.add(new TranslatableText("item.aft_fabroads.traffic_light_tip"));
-        tooltip.add(new TranslatableText("item.aft_fabroads.traffic_light_tip2"));
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.getHorizontalDirection());
     }
 
+    @Override
+    public BlockState rotate(BlockState state, Rotation direction) {
+        return state.setValue(BlockStateProperties.HORIZONTAL_FACING, direction.rotate(state.getValue(BlockStateProperties.HORIZONTAL_FACING)));
+    }
 
+    @Override
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(BlockStateProperties.HORIZONTAL_FACING)));
+    }
 
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    @Override
+    public void appendHoverText(ItemStack itemStack, @Nullable BlockGetter world, List<Component> tooltip, TooltipFlag tooltipContext) {
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.traffic_light_tip"));
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.traffic_light_tip2"));
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new TrafficLightEntity(pos, state);
     }
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
-    }
 
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
+    }
 }

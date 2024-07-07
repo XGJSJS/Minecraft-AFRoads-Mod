@@ -1,78 +1,76 @@
 package io.github.aftersans53228.aft_fabroads.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import io.github.aftersans53228.aft_fabroads.AFRoads;
 import io.github.aftersans53228.aft_fabroads.block.TrafficLightEntity;
 import io.github.aftersans53228.aft_fabroads.block.TrafficLightsControlEntity;
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
-import net.minecraft.client.render.model.json.ModelTransformation;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-import static net.minecraft.util.math.Direction.*;
+import static net.minecraft.core.Direction.*;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class TrafficLightEntityRender implements BlockEntityRenderer<TrafficLightEntity> {
     //获得物品stack
-    private static final ItemStack stackRed = new ItemStack(AFRoadsItemRegistry.TrafficLightBulbRed, 1);
-    private static final ItemStack stackGreen = new ItemStack(AFRoadsItemRegistry.TrafficLightBulbGreen, 1);
-    private static final ItemStack stackYellow = new ItemStack(AFRoadsItemRegistry.TrafficLightBulbYellow, 1);
+    private static final ItemStack stackRed = new ItemStack(AFRoadsItemRegistry.TrafficLightBulbRed.get(), 1);
+    private static final ItemStack stackGreen = new ItemStack(AFRoadsItemRegistry.TrafficLightBulbGreen.get(), 1);
+    private static final ItemStack stackYellow = new ItemStack(AFRoadsItemRegistry.TrafficLightBulbYellow.get(), 1);
 
-
-    public TrafficLightEntityRender(BlockEntityRendererFactory.Context ctx) {}
+    public TrafficLightEntityRender(BlockEntityRendererProvider.Context ctx) {}
 
     @Override
-    public void render(TrafficLightEntity blockEntity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+    public void render(TrafficLightEntity blockEntity, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
         /*
         //测试用1
-        FabroadsMod.LOGGER.info(blockEntity.getCachedState().get(Properties.HORIZONTAL_FACING));
-        FabroadsMod.LOGGER.info(blockEntity.getCachedState().get(TrafficLight.TrafficType));
+        FabroadsMod.LOGGER.info(blockEntity.getBlockState().get(Properties.HORIZONTAL_FACING));
+        FabroadsMod.LOGGER.info(blockEntity.getBlockState().get(TrafficLight.TrafficType));
          */
         /*
         //测试用2
-        System.out.println(blockEntity.getCachedState().get(Properties.HORIZONTAL_FACING));
-        System.out.println(blockEntity.getCachedState().get(TrafficLight.TrafficType));
+        System.out.println(blockEntity.getBlockState().get(Properties.HORIZONTAL_FACING));
+        System.out.println(blockEntity.getBlockState().get(TrafficLight.TrafficType));
         */
 
         //调用GL
-        matrices.push();
+        matrices.pushPose();
         //设置坐标
         matrices.translate(0.5, 0.5, 0.5);
         //设置旋转
-        Direction dir =blockEntity.getCachedState().get(Properties.HORIZONTAL_FACING);
+        Direction dir =blockEntity.getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
         if (dir==SOUTH){
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
+            matrices.mulPose(Vector3f.YP.rotation(180));
         }
         else if (dir==NORTH){
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(0));
+            matrices.mulPose(Vector3f.YP.rotation(0));
         }
         else if (dir==EAST){
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(270));
+            matrices.mulPose(Vector3f.YP.rotation(270));
         }
         else if (dir==WEST){
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(90));
+            matrices.mulPose(Vector3f.YP.rotation(90));
         }
         else{
             AFRoads.LOGGER.info("Unexpected traffic light orientation state.");
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(0));
+            matrices.mulPose(Vector3f.YP.rotation(0));
         }
         //选择渲染类型
-        if(blockEntity.getWorld()!=null) {
+        if (blockEntity.getLevel() != null) {
             TrafficLightsControlEntity controlBox;
-            if(blockEntity.getControlBoxPos()!=null) {
-                 controlBox= (TrafficLightsControlEntity) blockEntity.getWorld().getBlockEntity(blockEntity.getControlBoxPos());
-            }
-            else{
-                controlBox =null;
+            if (blockEntity.getControlBoxPos() != null) {
+                 controlBox = (TrafficLightsControlEntity) blockEntity.getLevel().getBlockEntity(blockEntity.getControlBoxPos());
+            } else {
+                controlBox = null;
             }
             if (controlBox != null) {
                 switch (dir) {
@@ -80,26 +78,22 @@ public class TrafficLightEntityRender implements BlockEntityRenderer<TrafficLigh
                         String type = controlBox.getLightType("NS");
                         switch (type) {
                             case "forward_green" ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackGreen, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
-                            case "forward_red" ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackRed, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
+                                    Minecraft.getInstance().getItemRenderer().renderStatic(stackGreen, ItemTransforms.TransformType.GROUND, 15728880, OverlayTexture.NO_OVERLAY, matrices, vertexConsumers, 0);
                             case "forward_yellow", "disable" ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackYellow, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
+                                    Minecraft.getInstance().getItemRenderer().renderStatic(stackYellow, ItemTransforms.TransformType.GROUND, 15728880, OverlayTexture.NO_OVERLAY, matrices, vertexConsumers, 0);
                             default ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackRed, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
+                                    Minecraft.getInstance().getItemRenderer().renderStatic(stackRed, ItemTransforms.TransformType.GROUND, 15728880, OverlayTexture.NO_OVERLAY, matrices, vertexConsumers, 0);
                         }
                     }
                     case EAST, WEST -> {
                         String type = controlBox.getLightType("WE");
                         switch (type) {
                             case "forward_green" ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackGreen, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
-                            case "forward_red" ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackRed, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
+                                    Minecraft.getInstance().getItemRenderer().renderStatic(stackGreen, ItemTransforms.TransformType.GROUND, 15728880, OverlayTexture.NO_OVERLAY, matrices, vertexConsumers, 0);
                             case "forward_yellow", "disable" ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackYellow, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
+                                    Minecraft.getInstance().getItemRenderer().renderStatic(stackYellow, ItemTransforms.TransformType.GROUND, 15728880, OverlayTexture.NO_OVERLAY, matrices, vertexConsumers, 0);
                             default ->
-                                    MinecraftClient.getInstance().getItemRenderer().renderItem(stackRed, ModelTransformation.Mode.GROUND, 15728880, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, 0);
+                                    Minecraft.getInstance().getItemRenderer().renderStatic(stackRed, ItemTransforms.TransformType.GROUND, 15728880, OverlayTexture.NO_OVERLAY, matrices, vertexConsumers, 0);
                         }
                     }
 
@@ -107,11 +101,7 @@ public class TrafficLightEntityRender implements BlockEntityRenderer<TrafficLigh
             }
         }
 
-
-
         //GL拜拜了您内
-        matrices.pop();
+        matrices.popPose();
     }
-
-
 }

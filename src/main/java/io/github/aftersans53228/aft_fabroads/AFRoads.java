@@ -1,101 +1,65 @@
 package io.github.aftersans53228.aft_fabroads;
 
-
-import io.github.aftersans53228.aft_fabroads.command.AftCommand;
-import io.github.aftersans53228.aft_fabroads.item.NormalRoadBlock;
-import io.github.aftersans53228.aft_fabroads.item.RoadDecoration;
-import io.github.aftersans53228.aft_fabroads.item.RoadStickers;
-import io.github.aftersans53228.aft_fabroads.network.GuiCloseNetwork;
-import io.github.aftersans53228.aft_fabroads.network.OnConnectingVersionCheck;
+import io.github.aftersans53228.aft_fabroads.network.*;
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry;
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
+import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsTabRegistry;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.NetworkRegistry;
+import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
- * @author Aftersans53228
+ * @author Aftersans53228, XGJS
  * Mod Main Class
  */
-public class AFRoads implements ModInitializer {
+@Mod(AFRoadsStatics.MOD_ID)
+public class AFRoads {
 	// 此记录器用于将文本写入控制台和日志文件。
 	// 使用您的 mod id 作为记录器的名称被认为是最佳实践。
 	// 这样一来，很清楚哪个 mod 打印了信息、警告和错误。
 	public static final Logger LOGGER = LogManager.getLogger("aft_fabroads");
+	private static final String CHANNEL_VERSION = "1";
+	public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(AFRoadsStatics.MOD_ID, "main"), () -> CHANNEL_VERSION, CHANNEL_VERSION::equals, CHANNEL_VERSION::equals);
+	private static int messageID = 0;
 
-
-	public static void registerPlayerJoinEvent(Consumer<ServerPlayerEntity> consumer) {
-		ServerEntityEvents.ENTITY_LOAD.register((entity, serverWorld) -> {
-			if (entity instanceof ServerPlayerEntity
-			) {
-				consumer.accept((ServerPlayerEntity) entity);
-			}
-		});
-	}
-	public static void registerGuiClose(Identifier id,BiConsumer<PacketByteBuf, ServerPlayerEntity> consumer) {
-		ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, responseSender)->{
-				consumer.accept(buf,player);
-		});
-	}
-
-
-
-
-	//交通灯计时器
-	public static int traffic_lights_timer =0 ;
-
-
-
-	//创建物品组
-	public static final ItemGroup NormalRoadBlockGROUP = NormalRoadBlock.get();
-	public static final ItemGroup RoadStickersGROUP = RoadStickers.get();
-	public static final ItemGroup RoadDecorationsGROUP = RoadDecoration.get();
-
-
-
-
-
-    @Override
-	public void onInitialize() {
-
-		AFRoadsBlockRegistry.RegisterBlock();
-		AFRoadsItemRegistry.RegisterItem();
-
-
-
-		//command
-		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> AftCommand.register(dispatcher));
-
-		//红绿灯计时器逻辑，即将取消
-		ServerTickEvents.END_SERVER_TICK.register((server)->
-		{
-			traffic_lights_timer = traffic_lights_timer +1 ;
-			if (traffic_lights_timer == 1200){
-				traffic_lights_timer = 0;
-			}
-		});
-
-		//服务端接发包
-		registerPlayerJoinEvent(OnConnectingVersionCheck::sendVersionCheck);
-		registerGuiClose(new Identifier(AFRoadsStatics.MOD_ID,"road_name_sign_gui_close"),GuiCloseNetwork::receiveGuiCloseRNS);
-		registerGuiClose(new Identifier(AFRoadsStatics.MOD_ID,"traffic_lights_control_box_gui_close"),GuiCloseNetwork::receiveGuiCloseTrafficLightsControlBox);
-
-
-
+	public AFRoads() {
+		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+		AFRoadsTabRegistry.load();
+		AFRoadsBlockRegistry.BLOCKS.register(bus);
+		AFRoadsBlockRegistry.BLOCK_ENTITY_TYPES.register(bus);
+		AFRoadsItemRegistry.ITEMS.register(bus);
 
 		LOGGER.info("AFRoads Misc Initialized");
-
 	}
 
+	public static <T> void addNetworkMessage(Class<T> messageType, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, BiConsumer<T, Supplier<NetworkEvent.Context>> messageConsumer) {
+		CHANNEL.registerMessage(messageID, messageType, encoder, decoder, messageConsumer);
+		messageID++;
+	}
+
+	@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+	public static class Event {
+		@SubscribeEvent
+		public static void commonSetup(FMLCommonSetupEvent event) {
+			addNetworkMessage(GuiCloseNetworkRNS.class, GuiCloseNetworkRNS::encoder, GuiCloseNetworkRNS::new, GuiCloseNetworkRNS::handler);
+			addNetworkMessage(GuiCloseTLCBMessage.class, GuiCloseTLCBMessage::encoder, GuiCloseTLCBMessage::new, GuiCloseTLCBMessage::handler);
+			addNetworkMessage(GuiOpenMessage.class, GuiOpenMessage::encoder, GuiOpenMessage::new, GuiOpenMessage::handler);
+			addNetworkMessage(DisconnectSelfMessage.class, DisconnectSelfMessage::encoder, DisconnectSelfMessage::new, DisconnectSelfMessage::handler);
+			addNetworkMessage(AttributesItemMessage.class, AttributesItemMessage::encoder, AttributesItemMessage::new, AttributesItemMessage::handler);
+		}
+	}
+	//交通灯计时器
+	public static int traffic_lights_timer =0 ;
 }

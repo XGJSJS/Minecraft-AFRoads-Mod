@@ -1,22 +1,22 @@
 package io.github.aftersans53228.aft_fabroads.block;
 
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry;
-import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.extensions.IForgeBlockEntity;
 
-
-public class TrafficLightEntity  extends BlockEntity implements BlockEntityClientSerializable {
+public class TrafficLightEntity  extends BlockEntity implements IForgeBlockEntity {
     private BlockPos boxPos ;
 
     public TrafficLightEntity(BlockPos pos, BlockState state) {
-        super(AFRoadsBlockRegistry.TRAFFIC_LIGHT_ENTITY, pos, state);
+        super(AFRoadsBlockRegistry.TRAFFIC_LIGHT_ENTITY.get(), pos, state);
     }
+
     @Override
-    public void readNbt(NbtCompound nbt) {
+    public void deserializeNBT(CompoundTag nbt) {
         if (nbt.contains("box_x")) {
             this.boxPos = new BlockPos(
                     nbt.getInt("box_x"),
@@ -24,41 +24,37 @@ public class TrafficLightEntity  extends BlockEntity implements BlockEntityClien
                     nbt.getInt("box_z")
             );
         }
-        super.readNbt(nbt);
+        super.deserializeNBT(nbt);
     }
 
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
-        if (boxPos!=null) {
+    public CompoundTag serializeNBT() {
+        CompoundTag nbt = super.serializeNBT();
+        if (boxPos != null) {
             nbt.putInt("box_x", boxPos.getX());
             nbt.putInt("box_y", boxPos.getY());
             nbt.putInt("box_z", boxPos.getZ());
         }
-        return super.writeNbt(nbt);
+        return nbt;
     }
 
     @Override
-    public void fromClientTag(NbtCompound tag) {
-        this.readNbt(tag);
-    }
-
-    @Override
-    public NbtCompound toClientTag(NbtCompound tag) {
-        return this.writeNbt(tag);
+    public void handleUpdateTag(CompoundTag tag) {
+        this.deserializeNBT(tag);
     }
 
     public void setControlBoxPos(BlockPos pos){
-        this.boxPos =pos;
-        this.markDirty();
-        if (this.world != null) {
-            this.world.updateListeners(this.pos,this.getCachedState(),this.getCachedState(),Block.NOTIFY_LISTENERS);
+        this.boxPos = pos;
+        this.setChanged();
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_CLIENTS);
         }
     }
+
     public BlockPos getControlBoxPos(){
-        if (this.world != null && this.boxPos !=null &&this.world.getBlockState(boxPos)!=null && this.world.getBlockState(boxPos).getBlock() != AFRoadsBlockRegistry.TrafficLightsControlBox) {
+        if (this.level != null && this.boxPos !=null && this.level.getBlockState(boxPos) != null && this.level.getBlockState(boxPos).getBlock() != AFRoadsBlockRegistry.TrafficLightsControlBox.get()) {
             this.boxPos = null;
         }
         return this.boxPos;
     }
-
 }

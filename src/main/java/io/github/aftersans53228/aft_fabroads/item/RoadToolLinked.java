@@ -3,20 +3,20 @@ package io.github.aftersans53228.aft_fabroads.item;
 import io.github.aftersans53228.aft_fabroads.block.TrafficLightEntity;
 import io.github.aftersans53228.aft_fabroads.block.TrafficLightsControlBox;
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.minecraft.block.Block;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,52 +24,60 @@ import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistr
 
 public class RoadToolLinked extends Item {
     private BlockPos boxPos = null;
-    private List<Block> canLinkBlock = new ArrayList<>();
+    private static final List<Block> canLinkBlock = new ArrayList<>();
+    private static boolean init;
+
     public RoadToolLinked() {
-        super(new FabricItemSettings().group(ItemGroup.TOOLS).maxCount(1).maxDamage(10));
-        this.canLinkBlock.add(TrafficLightsControlBox);
-        this.canLinkBlock.add(TrafficLight);
-        this.canLinkBlock.add(TrafficLightPavement);
+        super(new Item.Properties().tab(CreativeModeTab.TAB_TOOLS).stacksTo(1).durability(10));
     }
-    @Override
-    public void appendTooltip(ItemStack itemStack, World world, List<Text> tooltip, TooltipContext tooltipContext) {
 
+    @Override
+    public void appendHoverText(ItemStack itemStack, @Nullable Level world, List<Component> tooltip, TooltipFlag tooltipContext) {
         // 默认为白色文本
-        tooltip.add( new TranslatableText(" ") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool_l.tip1") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool_l.tip2") );
-        tooltip.add( new TranslatableText(" ") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool.tip_all") );
+        tooltip.add(TextComponent.EMPTY);
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.road_tool_l.tip1") );
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.road_tool_l.tip2") );
+        tooltip.add(TextComponent.EMPTY);
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.road_tool.tip_all") );
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        if(this.canLinkBlock.contains(context.getWorld().getBlockState(context.getBlockPos()).getBlock()) && context.getWorld().getBlockEntity(context.getBlockPos()) !=null) {
-            if (!context.getWorld().isClient()&& context.getWorld().getBlockEntity(context.getBlockPos()).getType().equals(AFRoadsBlockRegistry.TRAFFIC_LIGHTS_CONTROL_ENTITY)) {
+    public InteractionResult useOn(UseOnContext context) {
+        if (context.getPlayer() == null)
+            return InteractionResult.PASS;
+        if (this.canLinkBlock.contains(context.getLevel().getBlockState(context.getClickedPos()).getBlock()) && context.getLevel().getBlockEntity(context.getClickedPos()) != null) {
+            if (!context.getLevel().isClientSide() && context.getLevel().getBlockEntity(context.getClickedPos()).getType().equals(AFRoadsBlockRegistry.TRAFFIC_LIGHTS_CONTROL_ENTITY.get())) {
                 if (this.boxPos == null) {
-                    this.boxPos = context.getBlockPos();
-                    context.getPlayer().sendMessage(new LiteralText("Select the CONTROL BOX."), true);
+                    this.boxPos = context.getClickedPos();
+                    context.getPlayer().displayClientMessage(new TextComponent("Select the CONTROL BOX."), true);
                 } else {
-                    context.getPlayer().sendMessage(new LiteralText("Can't set CONTROL BOX as another."), true);
+                    context.getPlayer().displayClientMessage(new TextComponent("Can't set CONTROL BOX as another."), true);
                 }
-                return ActionResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
-            if (!context.getWorld().isClient()&& context.getWorld().getBlockEntity(context.getBlockPos()).getType().equals(AFRoadsBlockRegistry.TRAFFIC_LIGHT_ENTITY)) {
+            if (!context.getLevel().isClientSide() && context.getLevel().getBlockEntity(context.getClickedPos()).getType().equals(AFRoadsBlockRegistry.TRAFFIC_LIGHT_ENTITY.get())) {
                 if (this.boxPos != null) {
-                    TrafficLightEntity entity = (TrafficLightEntity) context.getWorld().getBlockEntity(context.getBlockPos());
+                    TrafficLightEntity entity = (TrafficLightEntity) context.getLevel().getBlockEntity(context.getClickedPos());
                     entity.setControlBoxPos(this.boxPos);
-                    context.getPlayer().sendMessage(new LiteralText("Set Traffic Light the CONTROL BOX."), true);
+                    context.getPlayer().displayClientMessage(new TextComponent("Set Traffic Light the CONTROL BOX."), true);
                     this.boxPos=null;
                 } else {
-                    context.getPlayer().sendMessage(new LiteralText("Traffic Lights aren't the linking starting."), true);
+                    context.getPlayer().displayClientMessage(new TextComponent("Traffic Lights aren't the linking starting."), true);
                 }
-                return ActionResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
+        } else {
+            context.getPlayer().displayClientMessage(new TextComponent("This block can't be linked."), true);
         }
-        else{
-            context.getPlayer().sendMessage(new LiteralText("This block can't be linked."), true);
-        }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
+    public static void init() {
+        if (!init) {
+            canLinkBlock.add(TrafficLightsControlBox.get());
+            canLinkBlock.add(TrafficLight.get());
+            canLinkBlock.add(TrafficLightPavement.get());
+            init = true;
+        }
+    }
 }

@@ -1,97 +1,87 @@
 package io.github.aftersans53228.aft_fabroads.item;
 
 import io.github.aftersans53228.aft_fabroads.AFRoads;
-import io.github.aftersans53228.aft_fabroads.AFRoadsStatics;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.command.BlockDataObject;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import io.github.aftersans53228.aft_fabroads.network.AttributesItemMessage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.commands.data.BlockDataAccessor;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.fmllegacy.network.NetworkDirection;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 public class RoadToolAttribute extends Item {
     public RoadToolAttribute() {
-        super(new FabricItemSettings().group(ItemGroup.TOOLS).maxCount(1).maxDamage(10));
-    }
-    @Override
-    public void appendTooltip(ItemStack itemStack, World world, List<Text> tooltip, TooltipContext tooltipContext) {
-        // 默认为白色文本
-        tooltip.add( new TranslatableText(" ") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool_a.tip1") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool_a.tip2") );
-        tooltip.add( new TranslatableText(" ") );
-        tooltip.add( new TranslatableText("item.aft_fabroads.road_tool.tip_all") );
+        super(new Item.Properties().tab(CreativeModeTab.TAB_TOOLS).stacksTo(1).durability(10));
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        final World world = context.getWorld();
-        if(!world.isClient()) {
-            final BlockPos pos = context.getBlockPos();
+    public void appendHoverText(ItemStack itemStack, @Nullable Level world, List<Component> tooltip, TooltipFlag flag) {
+        // 默认为白色文本
+        tooltip.add( new TextComponent(" ") );
+        tooltip.add( new TranslatableComponent("item.aft_fabroads.road_tool_a.tip1") );
+        tooltip.add( new TranslatableComponent("item.aft_fabroads.road_tool_a.tip2") );
+        tooltip.add( new TextComponent(" ") );
+        tooltip.add( new TranslatableComponent("item.aft_fabroads.road_tool.tip_all") );
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        final Level world = context.getLevel();
+        if(!world.isClientSide()) {
+            final BlockPos pos = context.getClickedPos();
             List<String> attributes = new ArrayList<>();
-            if (!world.getBlockState(pos).getEntries().isEmpty()) {
+            if (!world.getBlockState(pos).getProperties().isEmpty()) {
                attributes.add(world.getBlockState(pos).toString());
             }
             else {
                 attributes.add("None.");
             }
 
-            if(world.getBlockEntity(pos) !=null) {
-                final BlockDataObject bdo = new BlockDataObject(world.getBlockEntity(pos), pos);
-                attributes.add(bdo.getNbt().toString());
+            if (world.getBlockEntity(pos) != null) {
+                final BlockDataAccessor bdo = new BlockDataAccessor(world.getBlockEntity(pos), pos);
+                attributes.add(bdo.getData().toString());
             }
             else {
                 attributes.add("None.");
             }
             if (context.getPlayer()!=null) {
-                sendAttributeItem((ServerPlayerEntity) context.getPlayer(),attributes);
+                sendAttributeItem((ServerPlayer) context.getPlayer(),attributes);
             }
 
         }
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
-    public static void sendAttributeItem(ServerPlayerEntity player,List<String> attributes) {
-        PacketByteBuf packet = PacketByteBufs.create();
-        for(String o:attributes) {
-            packet.writeString(o);
-        }
-        ServerPlayNetworking.send(player, new Identifier(AFRoadsStatics.MOD_ID,"attributes_item_required"), packet);
+    public static void sendAttributeItem(ServerPlayer player,List<String> attributes) {
+        AFRoads.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new AttributesItemMessage(attributes.get(0), attributes.get(1)));
     }
-    public static void receiveAttributeItem(String s1,String s2, ClientPlayerEntity player) {
-        MinecraftClient client = MinecraftClient.getInstance();
+    public static void receiveAttributeItem(String s1,String s2, LocalPlayer player) {
+        Minecraft client = Minecraft.getInstance();
         client.execute(()->{
             StringBuilder textBuilder = new StringBuilder();
-            textBuilder.append(I18n.translate("text.return.aft_fabroads.tool_attribute1"));
+            textBuilder.append(I18n.get("text.return.aft_fabroads.tool_attribute1"));
             textBuilder.append(s1);
-            textBuilder.append(I18n.translate("text.return.aft_fabroads.tool_attribute2"));
+            textBuilder.append(I18n.get("text.return.aft_fabroads.tool_attribute2"));
             textBuilder.append(s2);
-            textBuilder.append(I18n.translate("text.return.aft_fabroads.tool_attribute3"));
+            textBuilder.append(I18n.get("text.return.aft_fabroads.tool_attribute3"));
             if (player!=null) {
-                player.sendMessage(new LiteralText(textBuilder.toString()), false);
+                player.displayClientMessage(new TextComponent(textBuilder.toString()), false);
             }
         });
     }
-
-
 }

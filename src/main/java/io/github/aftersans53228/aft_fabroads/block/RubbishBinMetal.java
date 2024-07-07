@@ -1,72 +1,75 @@
 package io.github.aftersans53228.aft_fabroads.block;
 
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.*;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry.RoadToolAttribute;
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsItemRegistry.RoadToolLinked;
 
-public class RubbishBinMetal extends HorizontalFacingBlock {
+public class RubbishBinMetal extends HorizontalDirectionalBlock {
 
     public RubbishBinMetal() {
-        super(FabricBlockSettings.of(Material.METAL).hardness(1.5f));
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
+        super(BlockBehaviour.Properties.of(Material.METAL).strength(1.5f));
+        this.registerDefaultState(this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
     }
+
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
-        stateManager.add(Properties.HORIZONTAL_FACING);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateManager) {
+        stateManager.add(BlockStateProperties.HORIZONTAL_FACING);
     }
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!player.isCreative() && ! player.getMainHandStack().isEmpty()&& !player.getMainHandStack().getItem().equals(RoadToolAttribute) && !player.getMainHandStack().getItem().equals(RoadToolLinked)){
-            player.getMainHandStack().setCount(0);
-            if (!world.isClient) {
+
+    @Override
+    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!player.isCreative() && ! player.getMainHandItem().isEmpty()&& !player.getMainHandItem().getItem().equals(RoadToolAttribute) && !player.getMainHandItem().getItem().equals(RoadToolLinked)) {
+            player.getMainHandItem().setCount(0);
+            if (!world.isClientSide()) {
                 world.playSound(
                         null, // 当不是null时给所有人放
                         pos, // 播放坐标
-                        SoundEvents.BLOCK_AZALEA_LEAVES_PLACE, // 播放声音
-                        SoundCategory.BLOCKS, // 播放类型
+                        SoundEvents.AZALEA_LEAVES_PLACE, // 播放声音
+                        SoundSource.BLOCKS, // 播放类型
                         2f, //声音
                         1f // 音高倍增器
                 );
             }
         }
         else{
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         }
-        return ActionResult.SUCCESS;
-    }
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext ctx) {
-        Direction dir = state.get(FACING);
-        switch(dir) {
-            case NORTH:
-            case SOUTH:
-                return VoxelShapes.cuboid(-0.11875, 0, 0.24375, 1.11875, 1.05625, 0.75625);
-            case EAST:
-            case WEST:
-                return VoxelShapes.cuboid(0.24375, 0, -0.11875, 0.75625, 1.05625, 1.11875);
-            default:
-                return VoxelShapes.fullCube();
-        }
+        return InteractionResult.SUCCESS;
     }
 
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getDefaultState().with(FACING, ctx.getPlayerFacing());
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
+        Direction dir = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        return switch (dir) {
+            case NORTH, SOUTH -> Shapes.box(-0.11875, 0, 0.24375, 1.11875, 1.05625, 0.75625);
+            case EAST, WEST -> Shapes.box(0.24375, 0, -0.11875, 0.75625, 1.05625, 1.11875);
+            default -> Shapes.block();
+        };
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.getHorizontalDirection());
     }
 }

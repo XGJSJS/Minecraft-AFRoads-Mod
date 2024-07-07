@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[37,)"
+license="CC0-1.0"
+issueTrackerURL="https://github.com/aftersans53228/Minecraft-AFRoads-Mod/issues"
+[[mods]]
+modId="aft_fabroads"
+version="${file.jarVersion}"
+displayName="Aftersans53228's fabric roads"
+displayURL="https://space.bilibili.com/407495850"
+logoFile="icon.png"
+authors="aftersans53228, XGJS"
+description='''
+为Minecraft加入了大量道路建筑方块与设施.
+点缀你的城建世界！
+
+A large number of road building blocks and facilities for Minecraft.
+Decorate your world of urban and road construction!
+'''
+[[dependencies.aft_fabroads]]
+    modId="forge"
+    mandatory=true
+    versionRange="[37,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.aft_fabroads]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.17.1,1.18)"
+    ordering="NONE"
+    side="BOTH"

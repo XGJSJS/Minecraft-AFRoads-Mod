@@ -4,81 +4,92 @@ import io.github.aftersans53228.aft_fabroads.block.voxelshapes.PtlEast;
 import io.github.aftersans53228.aft_fabroads.block.voxelshapes.PtlNorth;
 import io.github.aftersans53228.aft_fabroads.block.voxelshapes.PtlSouth;
 import io.github.aftersans53228.aft_fabroads.block.voxelshapes.PtlWest;
-import io.github.aftersans53228.aft_fabroads.AFRoads;
-
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
-public  class TrafficLightPavement extends BlockWithEntity implements BlockEntityProvider {
-    public static final IntProperty TrafficType = IntProperty.of("type",0,2);
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+public  class TrafficLightPavement extends BaseEntityBlock {
+    public static final IntegerProperty TrafficType = IntegerProperty.create("type", 0, 2);
 
-
-    public TrafficLightPavement(){
-        super(FabricBlockSettings.of(Material.STONE).hardness(1.5f).nonOpaque().luminance(3));
-        setDefaultState(getStateManager().getDefaultState().with(TrafficType, 0));
-        setDefaultState(this.stateManager.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
+    public TrafficLightPavement() {
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f).noCollission().lightLevel(state -> 3));
+        this.registerDefaultState(this.defaultBlockState().setValue(TrafficType, 0).setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
     }
+
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> stateManager) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateManager) {
         stateManager.add(TrafficType);
-        stateManager.add(Properties.HORIZONTAL_FACING);
+        stateManager.add(BlockStateProperties.HORIZONTAL_FACING);
     }
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext ctx) {
-        Direction dir = state.get(FACING);
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter blockGetter, BlockPos pos, CollisionContext context) {
+        Direction dir = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
         return switch (dir) {
             case NORTH -> PtlNorth.getShape();
             case SOUTH -> PtlSouth.getShape();
             case EAST -> PtlEast.getShape();
             case WEST -> PtlWest.getShape();
-            default -> VoxelShapes.fullCube();
+            default -> Shapes.block();
         };
     }
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return (BlockState)this.getDefaultState().with(FACING, ctx.getPlayerFacing());
-    }
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return (BlockState)state.with(FACING, rotation.rotate(state.get(FACING)));
-    }
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
-    }
-    public void appendTooltip(ItemStack itemStack, BlockView world, List<Text> tooltip, TooltipContext tooltipContext) {
-        tooltip.add(new TranslatableText("item.aft_fabroads.traffic_light_tip"));
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        return this.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.getHorizontalDirection());
     }
 
+    @Override
+    public BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(BlockStateProperties.HORIZONTAL_FACING, rotation.rotate(state.getValue(BlockStateProperties.HORIZONTAL_FACING)));
+    }
 
+    @Override
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(BlockStateProperties.HORIZONTAL_FACING)));
+    }
 
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    @Override
+    public void appendHoverText(ItemStack itemStack, BlockGetter world, List<Component> tooltip, TooltipFlag tooltipContext) {
+        tooltip.add(new TranslatableComponent("item.aft_fabroads.traffic_light_tip"));
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new TrafficLightPavementEntity(pos, state);
     }
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
+
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
     }
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return checkType(type, AFRoadsBlockRegistry.TRAFFIC_LIGHT_PAVEMENT_ENTITY, (world1, pos, state1, be) -> TrafficLightPavementEntity.tick(world1, pos, state1, state.get(FACING)));
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
+        return world.isClientSide() ? null : createTickerHelper(type, AFRoadsBlockRegistry.TRAFFIC_LIGHT_PAVEMENT_ENTITY.get(), (world1, pos, state1, be) -> TrafficLightPavementEntity.tick(world1, pos, state1, state.getValue(BlockStateProperties.HORIZONTAL_FACING)));
     }
 }

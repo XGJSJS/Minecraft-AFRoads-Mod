@@ -2,51 +2,59 @@ package io.github.aftersans53228.aft_fabroads.gui;
 
 import io.github.aftersans53228.aft_fabroads.AFRoads;
 import io.github.aftersans53228.aft_fabroads.AFRoadsStatics;
-import io.github.aftersans53228.aft_fabroads.network.GuiCloseNetwork;
-import io.github.cottonmc.cotton.gui.client.LightweightGuiDescription;
-import io.github.cottonmc.cotton.gui.widget.*;
-import io.github.cottonmc.cotton.gui.widget.data.Axis;
-import io.github.cottonmc.cotton.gui.widget.data.Insets;
-import io.github.cottonmc.cotton.gui.widget.data.VerticalAlignment;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import io.github.aftersans53228.aft_fabroads.network.GuiCloseNetworkRNS;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.sql.Array;
 import java.util.ArrayList;
-import java.util.function.Supplier;
 
 /**
- * @author aftersans53228
+ * @author aftersans53228, XGJS
  */
-@Environment(EnvType.CLIENT)
-public class TrafficControlBoxGui extends LightweightGuiDescription {
-    public TrafficControlBoxGui(BlockPos posOfBlock, Boolean enabled, ArrayList<Integer> timeData){
-        WGridPanel root = new WGridPanel(9);
+@OnlyIn(Dist.CLIENT)
+public class TrafficControlBoxGui extends Screen {
+    protected int leftPos;
+    protected int topPos;
+
+    private final BlockPos posOfBlock;
+    private final boolean enabled;
+    private final ArrayList<Integer> timeData;
+
+    public TrafficControlBoxGui(BlockPos posOfBlock, boolean enabled, ArrayList<Integer> timeData) {
+        super(TextComponent.EMPTY);
+        this.posOfBlock = posOfBlock;
+        this.enabled = enabled;
+        this.timeData = timeData;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        this.leftPos = (this.width - 176) / 2;
+        this.topPos = (this.height - 166) / 2;
+
+        //TODO implement GUI
+        /*WGridPanel root = new WGridPanel(9);
         root.setSize(254,160);
         root.setInsets(Insets.ROOT_PANEL);
         setRootPanel(root);
 
         //标题
-        WLabel title = new WLabel(new TranslatableText("block.aft_fabroads.traffic_lights_control_box"));
+        WLabel title = new WLabel(new TranslatableComponent("block.aft_fabroads.traffic_lights_control_box"));
         title.setVerticalAlignment(VerticalAlignment.TOP);
         root.add(title,0, 0, 12, 3);
 
         //内容
-        WLabel labelRed = new WLabel(new TranslatableText("text.gui.aft_fabroads.traffic_control_box_red"));
+        WLabel labelRed = new WLabel(new TranslatableComponent("text.gui.aft_fabroads.traffic_control_box_red"));
         root.add(labelRed,0, 2, 8, 2);
-        WLabel labelGreen = new WLabel(new TranslatableText("text.gui.aft_fabroads.traffic_control_box_green"));
+        WLabel labelGreen = new WLabel(new TranslatableComponent("text.gui.aft_fabroads.traffic_control_box_green"));
         root.add(labelGreen,0, 6, 8, 2);
-        WLabel labelRedTurn = new WLabel(new TranslatableText("text.gui.aft_fabroads.traffic_control_box_red_turn"));
+        WLabel labelRedTurn = new WLabel(new TranslatableComponent("text.gui.aft_fabroads.traffic_control_box_red_turn"));
         root.add(labelRedTurn,0, 10, 8, 2);
-        WLabel labelGreenTurn = new WLabel(new TranslatableText("text.gui.aft_fabroads.traffic_control_box_green_turn"));
+        WLabel labelGreenTurn = new WLabel(new TranslatableComponent("text.gui.aft_fabroads.traffic_control_box_green_turn"));
         root.add(labelGreenTurn,0, 14, 8, 2);
 
         //滑块
@@ -76,18 +84,18 @@ public class TrafficControlBoxGui extends LightweightGuiDescription {
         root.add(labelShowGreenTurn,11, 16, 4, 1);
 
         //应用和取消
-        WButton apply = new WButton(new TranslatableText("text.gui.aft_fabroads.apply"));
+        WButton apply = new WButton(new TranslatableComponent("text.gui.aft_fabroads.apply"));
         root.add(apply, 22, 16, 4, 3);
 
-        WButton cancel = new WButton(new TranslatableText("text.gui.aft_fabroads.cancel"));
+        WButton cancel = new WButton(new TranslatableComponent("text.gui.aft_fabroads.cancel"));
         root.add(cancel, 17, 16, 4, 3);
 
         //重置
-        WButton reset = new WButton(new TranslatableText("text.gui.aft_fabroads.reset"));
+        WButton reset = new WButton(new TranslatableComponent("text.gui.aft_fabroads.reset"));
         root.add(reset, 20, 3, 4, 3);
 
         //是否启用灯箱
-        WLabel whetherEnabled = new WLabel(new TranslatableText("text.gui.aft_fabroads.traffic_control_box_whether_enabled"));
+        WLabel whetherEnabled = new WLabel(new TranslatableComponent("text.gui.aft_fabroads.traffic_control_box_whether_enabled"));
         WToggleButton toggleButtonTimer = new WToggleButton();
         toggleButtonTimer.setToggle(enabled);
         root.add(whetherEnabled, 20, 9, 2, 2);
@@ -116,9 +124,8 @@ public class TrafficControlBoxGui extends LightweightGuiDescription {
             buf.writeIntArray(new int[]{sliderGreen.getValue(), sliderRed.getValue(), sliderGreenTurn.getValue(), sliderRedTurn.getValue()});
             buf.writeBoolean(toggleButtonTimer.getToggle());
             AFRoads.LOGGER.info("Close the\"Traffic Control Box\"'s gui. ");
-            GuiCloseNetwork.sendGuiClose(new Identifier(AFRoadsStatics.MOD_ID,"traffic_lights_control_box_gui_close"),buf);
+            GuiCloseNetworkRNS.sendGuiClose(new Identifier(AFRoadsStatics.MOD_ID,"traffic_lights_control_box_gui_close"),buf);
             MinecraftClient.getInstance().setScreen((Screen) null);
-        });
-
+        });*/
     }
 }

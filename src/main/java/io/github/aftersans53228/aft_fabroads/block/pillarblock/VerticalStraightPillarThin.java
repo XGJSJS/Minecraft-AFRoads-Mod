@@ -1,22 +1,22 @@
 package io.github.aftersans53228.aft_fabroads.block.pillarblock;
 
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
 
 public class VerticalStraightPillarThin extends Block {
-
     public VerticalStraightPillarThin() {
-        super(FabricBlockSettings.of(Material.STONE).hardness(1.2f));
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.2f));
     }
+
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext ctx) {
-            return VoxelShapes.cuboid(0.375, 0f, 0.375, 0.625, 1f, 0.625);
+    public VoxelShape getShape(BlockState p_60555_, BlockGetter p_60556_, BlockPos p_60557_, CollisionContext p_60558_) {
+        return Shapes.box(0.375, 0f, 0.375, 0.625, 1f, 0.625);
     }
 }

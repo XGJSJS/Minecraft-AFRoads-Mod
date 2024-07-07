@@ -1,66 +1,64 @@
 package io.github.aftersans53228.aft_fabroads.block;
 
 import io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry;
-import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.extensions.IForgeBlockEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class RoadNameSignEntity extends BlockEntity  implements BlockEntityClientSerializable {
+public class RoadNameSignEntity extends BlockEntity implements IForgeBlockEntity {
     private String roadName = "未命名";
     private String roadName2rd = "Unnamed";
 
 
     public RoadNameSignEntity(BlockPos pos, BlockState state){
-            super(AFRoadsBlockRegistry.ROAD_NAME_SIGN_ENTITY, pos, state);
+        super(AFRoadsBlockRegistry.ROAD_NAME_SIGN_ENTITY.get(), pos, state);
     }
 
     @Override
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
+    public void deserializeNBT(CompoundTag nbt) {
         this.roadName = nbt.getString("road_name");
         this.roadName2rd = nbt.getString("road_name2rd");
+        super.deserializeNBT(nbt);
     }
 
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public CompoundTag serializeNBT() {
+        CompoundTag nbt = super.serializeNBT();
         nbt.putString("road_name",this.roadName);
         nbt.putString("road_name2rd",this.roadName2rd);
-        return super.writeNbt(nbt);
+        return nbt;
     }
 
     @Override
-    public void fromClientTag(NbtCompound tag) {
-        this.readNbt(tag);
-        this.roadName = tag.getString("road_name");
-        this.roadName2rd = tag.getString("road_name2rd");
-    }
-
-    @Override
-    public NbtCompound toClientTag(NbtCompound tag) {
-        return this.writeNbt(tag);
+    public void handleUpdateTag(CompoundTag tag) {
+        this.deserializeNBT(tag);
     }
 
     public void setRoadNames(String roadName) {
         this.roadName = roadName;
-        this.markDirty();
-        world.updateListeners(pos, this.getCachedState(), this.getCachedState(), Block.NOTIFY_LISTENERS);
+        this.setChanged();
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_CLIENTS);
+        }
     }
     public void setRoadNames2(String roadName2rd){
         this.roadName2rd = roadName2rd;
-        this.markDirty();
-        world.updateListeners(pos, this.getCachedState(), this.getCachedState(), Block.NOTIFY_LISTENERS);
+        this.setChanged();
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_CLIENTS);
+        }
     }
+
     public List<String> getRoadNames(){
-        List<String> names= new ArrayList<>();
-        names.add(0,this.roadName);
-        names.add(1,this.roadName2rd);
+        List<String> names = new ArrayList<>();
+        names.add(0, this.roadName);
+        names.add(1, this.roadName2rd);
         return names;
     }
 }
-

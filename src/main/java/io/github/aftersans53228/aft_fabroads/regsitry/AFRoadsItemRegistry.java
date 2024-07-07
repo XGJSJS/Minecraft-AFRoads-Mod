@@ -2,175 +2,178 @@ package io.github.aftersans53228.aft_fabroads.regsitry;
 
 import io.github.aftersans53228.aft_fabroads.AFRoads;
 import io.github.aftersans53228.aft_fabroads.AFRoadsStatics;
-import io.github.aftersans53228.aft_fabroads.block.*;
-import io.github.aftersans53228.aft_fabroads.block.pillarblock.*;
-import io.github.aftersans53228.aft_fabroads.block.signblock.*;
-import io.github.aftersans53228.aft_fabroads.block.stickerblock.ArrowBlocks;
-import io.github.aftersans53228.aft_fabroads.block.stickerblock.LineBlocks;
-import io.github.aftersans53228.aft_fabroads.block.structureblock.ConcreteColumnsCorner;
-import io.github.aftersans53228.aft_fabroads.block.structureblock.ConcreteSlab;
-import io.github.aftersans53228.aft_fabroads.block.structureblock.ConcreteStairs;
 import io.github.aftersans53228.aft_fabroads.item.RoadTool;
 import io.github.aftersans53228.aft_fabroads.item.RoadToolAttribute;
 import io.github.aftersans53228.aft_fabroads.item.RoadToolLinked;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.minecraft.block.Block;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraftforge.fmllegacy.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
-import static io.github.aftersans53228.aft_fabroads.AFRoads.*;
 import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsBlockRegistry.*;
+import static io.github.aftersans53228.aft_fabroads.regsitry.AFRoadsTabRegistry.*;
 
 public class AFRoadsItemRegistry {
-    private static Item register(String id, Item item) {
-        return (Item)Registry.register(Registry.ITEM, new Identifier(AFRoadsStatics.MOD_ID,id), item);
+    public static final DeferredRegister<Item> ITEMS;
+
+    private static RegistryObject<Item> register(String id, Item item) {
+        return ITEMS.register(id, () -> item);
 
     }
-    private static Item registerBlock(String id, Block block) {
-        return (Item)Registry.register(Registry.ITEM, new Identifier(AFRoadsStatics.MOD_ID,id), new BlockItem(block,new Item.Settings().group(NormalRoadBlockGROUP)));
+    private static RegistryObject<Item> registerBlock(String id, RegistryObject<Block> block) {
+        return ITEMS.register(id, () -> new BlockItem(block.get(), new Item.Properties().tab(NormalRoadBlockGROUP)));
     }
-    private static Item registerSticker(String id, Block block) {
-        return (Item)Registry.register(Registry.ITEM,new Identifier(AFRoadsStatics.MOD_ID,id), new BlockItem(block,new Item.Settings().group(RoadStickersGROUP)));
+    private static RegistryObject<Item> registerSticker(String id, RegistryObject<Block> block) {
+        return ITEMS.register(id, () -> new BlockItem(block.get(), new Item.Properties().tab(RoadStickersGROUP)));
     }
-    private static Item registerDecoration(String id, Block block) {
-        return (Item)Registry.register(Registry.ITEM, new Identifier(AFRoadsStatics.MOD_ID,id), new BlockItem(block,new Item.Settings().group(RoadDecorationsGROUP)));
+    private static RegistryObject<Item> registerDecoration(String id, RegistryObject<Block> block) {
+        return ITEMS.register(id, () -> new BlockItem(block.get(), new Item.Properties().tab(RoadDecorationsGROUP)));
+    }
+
+    private static RegistryObject<Item> registerBlock(RegistryObject<Block> block) {
+        return ITEMS.register(block.getId().getPath(), () -> new BlockItem(block.get(), new Item.Properties().tab(NormalRoadBlockGROUP)));
+    }
+
+    private static RegistryObject<Item> registerSticker(RegistryObject<Block> block) {
+        return ITEMS.register(block.getId().getPath(), () -> new BlockItem(block.get(), new Item.Properties().tab(RoadStickersGROUP)));
     }
     
-    public static  Item RoadTool;
-    public static  Item RoadToolLinked;
-    public static  Item RoadToolAttribute;
-    public static  Item TrafficLightBulbRed;
-    public static  Item TrafficLightBulbGreen;
-    public static  Item TrafficLightBulbYellow;
-    public static  Item TrafficLightPavementBulbRed;
-    public static  Item TrafficLightPavementBulbGreen;
-    public static  Item RoadLightBulbCold;
-    public static  Item RoadLightBulbWarm;
+    public static final RegistryObject<Item> RoadTool;
+    public static final RegistryObject<Item> RoadToolLinked;
+    public static final RegistryObject<Item> RoadToolAttribute;
+    public static final RegistryObject<Item> TrafficLightBulbRed;
+    public static final RegistryObject<Item> TrafficLightBulbGreen;
+    public static final RegistryObject<Item> TrafficLightBulbYellow;
+    public static final RegistryObject<Item> TrafficLightPavementBulbRed;
+    public static final RegistryObject<Item> TrafficLightPavementBulbGreen;
+    public static final RegistryObject<Item> RoadLightBulbCold;
+    public static final RegistryObject<Item> RoadLightBulbWarm;
 
-    public static  Item RoadBlockItem;
-    public static  Item RoadBlockConcreteItem;
-    public static  Item ManholeCoverItem;
-    public static  Item ManholeCoverConcreteItem;
-    public static  Item RoadSeamsBlockItem ;
-    public static  Item RoadSeamsBlockConcreteItem ;
-    public static  Item ConcreteSlabItem ;
-    public static  Item ConcreteStairsItem;
-    public static  Item ConcreteStairsSmoothItem ;
-    public static  Item ConcreteColumnsCornerItem;
+    public static final RegistryObject<Item> RoadBlockItem;
+    public static final RegistryObject<Item> RoadBlockConcreteItem;
+    public static final RegistryObject<Item> ManholeCoverItem;
+    public static final RegistryObject<Item> ManholeCoverConcreteItem;
+    public static final RegistryObject<Item> RoadSeamsBlockItem ;
+    public static final RegistryObject<Item> RoadSeamsBlockConcreteItem ;
+    public static final RegistryObject<Item> ConcreteSlabItem ;
+    public static final RegistryObject<Item> ConcreteStairsItem;
+    public static final RegistryObject<Item> ConcreteStairsSmoothItem ;
+    public static final RegistryObject<Item> ConcreteColumnsCornerItem;
     //创建划线贴纸
-    public static  Item LineStraightItem;
-    public static  Item LineCornerItem ;
-    public static  Item LineTshapedItem ;
-    public static  Item LineCrossItem ;
-    public static  Item LineDiagonalItem ;
-    public static  Item LineLeftBendItem ;
-    public static  Item LineRightBendItem ;
-    public static  Item LineForkLeftItem ;
-    public static  Item LineForkRightItem ;
-    public static  Item LineStraightThickItem;
-    public static  Item LineStraightDuoLineItem;
-    public static  Item LineStraightDuoThickItem;
-    public static  Item LineStraightDuoThickDashedItem;
-    public static  Item LineDecelerateWithLineItem ;
-    public static  Item LineDecelerateWithLineFlipItem ;
-    public static  Item LineDecelerateNoLineItem ;
-    public static  Item LineDecelerateNoLineFlipItem ;
-    public static  Item LineDecelerateDoubleWLItem ;
-    public static  Item LineDecelerateDoubleNLItem ;
-    public static  Item LineReversibleLanesItem ;
-    public static  Item LineReversibleLanesFlipItem ;
-    public static  Item LineReversibleLanesDoubleItem ;
+    public static final RegistryObject<Item> LineStraightItem;
+    public static final RegistryObject<Item> LineCornerItem ;
+    public static final RegistryObject<Item> LineTshapedItem ;
+    public static final RegistryObject<Item> LineCrossItem ;
+    public static final RegistryObject<Item> LineDiagonalItem ;
+    public static final RegistryObject<Item> LineLeftBendItem ;
+    public static final RegistryObject<Item> LineRightBendItem ;
+    public static final RegistryObject<Item> LineForkLeftItem ;
+    public static final RegistryObject<Item> LineForkRightItem ;
+    public static final RegistryObject<Item> LineStraightThickItem;
+    public static final RegistryObject<Item> LineStraightDuoLineItem;
+    public static final RegistryObject<Item> LineStraightDuoThickItem;
+    public static final RegistryObject<Item> LineStraightDuoThickDashedItem;
+    public static final RegistryObject<Item> LineDecelerateWithLineItem ;
+    public static final RegistryObject<Item> LineDecelerateWithLineFlipItem ;
+    public static final RegistryObject<Item> LineDecelerateNoLineItem ;
+    public static final RegistryObject<Item> LineDecelerateNoLineFlipItem ;
+    public static final RegistryObject<Item> LineDecelerateDoubleWLItem ;
+    public static final RegistryObject<Item> LineDecelerateDoubleNLItem ;
+    public static final RegistryObject<Item> LineReversibleLanesItem ;
+    public static final RegistryObject<Item> LineReversibleLanesFlipItem ;
+    public static final RegistryObject<Item> LineReversibleLanesDoubleItem ;
     //创建箭头贴纸
-    public static  Item ArrowForwardItem;
-    public static  Item ArrowLeftItem ;
-    public static  Item ArrowRightItem;
-    public static  Item ArrowForwardLeftItem ;
-    public static  Item ArrowForwardRightItem ;
-    public static  Item ArrowBackItem ;
-    public static  Item ArrowLeftRightItem ;
-    public static  Item ArrowBackLeftItem ;
-    public static  Item ArrowBackForwardItem ;
-    public static  Item ArrowConfluenceLeftItem ;
-    public static  Item ArrowConfluenceRightItem ;
+    public static final RegistryObject<Item> ArrowForwardItem;
+    public static final RegistryObject<Item> ArrowLeftItem ;
+    public static final RegistryObject<Item> ArrowRightItem;
+    public static final RegistryObject<Item> ArrowForwardLeftItem ;
+    public static final RegistryObject<Item> ArrowForwardRightItem ;
+    public static final RegistryObject<Item> ArrowBackItem ;
+    public static final RegistryObject<Item> ArrowLeftRightItem ;
+    public static final RegistryObject<Item> ArrowBackLeftItem ;
+    public static final RegistryObject<Item> ArrowBackForwardItem ;
+    public static final RegistryObject<Item> ArrowConfluenceLeftItem ;
+    public static final RegistryObject<Item> ArrowConfluenceRightItem ;
     //创建图标贴纸
-    public static  Item IconDecelerateStickerItem;
-    public static  Item IconStopStickerItem;
-    public static  Item IconGiveWayStickerItem;
+    public static final RegistryObject<Item> IconDecelerateStickerItem;
+    public static final RegistryObject<Item> IconStopStickerItem;
+    public static final RegistryObject<Item> IconGiveWayStickerItem;
     //创建装饰方块
-    public static  Item RailingsItem ;
-    public static  Item PavementRailingsItem ;
-    public static  Item ExpresswayRailingsBaseItem ;
-    public static  Item ExpresswayIronRailingsItem;
-    public static  Item ExpresswayIronRailings2Item;
-    public static  Item ExpresswayRailingsItem ;
-    public static  Item ExpresswayRailingsType2Item ;
-    public static  Item InsulationPanelsRailingsItem ;
-    public static  Item InsulationPanelsGrayPart1Item ;
-    public static  Item InsulationPanelsGrayPart2Item;
-    public static  Item InsulationPanelsGrayPart3Item ;
-    public static  Item InsulationPanelsGrayPart4Item;
-    public static  Item InsulationPanelsGrayPart5Item;
-    public static  Item InsulationPanelsGrayPart6Item ;
+    public static final RegistryObject<Item> RailingsItem ;
+    public static final RegistryObject<Item> PavementRailingsItem ;
+    public static final RegistryObject<Item> ExpresswayRailingsBaseItem ;
+    public static final RegistryObject<Item> ExpresswayIronRailingsItem;
+    public static final RegistryObject<Item> ExpresswayIronRailings2Item;
+    public static final RegistryObject<Item> ExpresswayRailingsItem ;
+    public static final RegistryObject<Item> ExpresswayRailingsType2Item ;
+    public static final RegistryObject<Item> InsulationPanelsRailingsItem ;
+    public static final RegistryObject<Item> InsulationPanelsGrayPart1Item ;
+    public static final RegistryObject<Item> InsulationPanelsGrayPart2Item;
+    public static final RegistryObject<Item> InsulationPanelsGrayPart3Item ;
+    public static final RegistryObject<Item> InsulationPanelsGrayPart4Item;
+    public static final RegistryObject<Item> InsulationPanelsGrayPart5Item;
+    public static final RegistryObject<Item> InsulationPanelsGrayPart6Item ;
 
-    public static  Item BarrierBarItem;
-    public static  Item TrafficLightsControlBoxItem ;
-    public static  Item TrafficLightItem ;
-    public static  Item TrafficLightPavementItem ;
-    public static  Item RoadLightItem ;
+    public static final RegistryObject<Item> BarrierBarItem;
+    public static final RegistryObject<Item> TrafficLightsControlBoxItem ;
+    public static final RegistryObject<Item> TrafficLightItem;
+    public static final RegistryObject<Item> TrafficLightPavementItem ;
+    public static final RegistryObject<Item> RoadLightItem ;
 
-    public static  Item PillarBaseItem ;
-    public static  Item HorizontalStraightPillarItem;
-    public static  Item VerticalStraightPillarItem ;
-    public static  Item HorizontalCornerPillarItem ;
-    public static  Item VerticalCornerPillarItem ;
-    public static  Item HorizontalTshapedPillarItem ;
-    public static  Item VerticalTshapedPillarItem ;
-    public static  Item VerticalTshapedPillarType2Item ;
-    public static  Item RoadMastPillarBaseItem ;
-    public static  Item RoadMastPillarItem;
-    public static  Item HorizontalStraightPillarThinItem ;
-    public static  Item VerticalStraightPillarThinItem ;
-    public static  Item VerticalCornerPillarThinItem;
-    public static  Item SmartPillarItem;
-    public static  Item SmartPillarThinItem;
+    public static final RegistryObject<Item> PillarBaseItem ;
+    public static final RegistryObject<Item> HorizontalStraightPillarItem;
+    public static final RegistryObject<Item> VerticalStraightPillarItem ;
+    public static final RegistryObject<Item> HorizontalCornerPillarItem ;
+    public static final RegistryObject<Item> VerticalCornerPillarItem ;
+    public static final RegistryObject<Item> HorizontalTshapedPillarItem ;
+    public static final RegistryObject<Item> VerticalTshapedPillarItem ;
+    public static final RegistryObject<Item> VerticalTshapedPillarType2Item ;
+    public static final RegistryObject<Item> RoadMastPillarBaseItem ;
+    public static final RegistryObject<Item> RoadMastPillarItem;
+    public static final RegistryObject<Item> HorizontalStraightPillarThinItem ;
+    public static final RegistryObject<Item> VerticalStraightPillarThinItem ;
+    public static final RegistryObject<Item> VerticalCornerPillarThinItem;
+    public static final RegistryObject<Item> SmartPillarItem;
+    public static final RegistryObject<Item> SmartPillarThinItem;
 
-    public static  Item SignIndicatorDirectionLeftItem ;
-    public static  Item SignIndicatorDirectionRightItem;
-    public static  Item SignIndicatorDirectionCarItem ;
-    public static  Item SignIndicatorDirectionBicycleItem ;
-    public static  Item SignBanNoDriveItem ;
-    public static  Item SignBanStopItem;
-    public static  Item SignBanSpeedLimit05Item ;
-    public static  Item SignBanSpeedLimit20Item ;
-    public static  Item SignBanSpeedLimit30Item ;
-    public static  Item SignBanSpeedLimit40Item ;
-    public static  Item SignBanSpeedLimit50Item ;
-    public static  Item SignBanSpeedLimit60Item ;
-    public static  Item SignBanSpeedLimit70Item ;
-    public static  Item SignBanSpeedLimit80Item ;
+    public static final RegistryObject<Item> SignIndicatorDirectionLeftItem ;
+    public static final RegistryObject<Item> SignIndicatorDirectionRightItem;
+    public static final RegistryObject<Item> SignIndicatorDirectionCarItem ;
+    public static final RegistryObject<Item> SignIndicatorDirectionBicycleItem ;
+    public static final RegistryObject<Item> SignBanNoDriveItem ;
+    public static final RegistryObject<Item> SignBanStopItem;
+    public static final RegistryObject<Item> SignBanSpeedLimit05Item ;
+    public static final RegistryObject<Item> SignBanSpeedLimit20Item ;
+    public static final RegistryObject<Item> SignBanSpeedLimit30Item ;
+    public static final RegistryObject<Item> SignBanSpeedLimit40Item ;
+    public static final RegistryObject<Item> SignBanSpeedLimit50Item ;
+    public static final RegistryObject<Item> SignBanSpeedLimit60Item ;
+    public static final RegistryObject<Item> SignBanSpeedLimit70Item ;
+    public static final RegistryObject<Item> SignBanSpeedLimit80Item ;
 
-    public static  Item RubbishBinMetalItem;
-    public static  Item TrashBinGreenItem;
-    public static  Item RoadNameSignItem ;
+    public static final RegistryObject<Item> RubbishBinMetalItem;
+    public static final RegistryObject<Item> TrashBinGreenItem;
+    public static final RegistryObject<Item> RoadNameSignItem ;
     
     
-    public static void RegisterItem(){
+    static {
+        ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, AFRoadsStatics.MOD_ID);
+
         //Items
         RoadTool=register("road_tool",new RoadTool());
         RoadToolLinked=register("road_tool_linked",new RoadToolLinked());
         RoadToolAttribute =register("road_tool_attribute",new RoadToolAttribute());
-        TrafficLightBulbRed=register("traffic_light_red_bulb", new Item(new FabricItemSettings()));
-        TrafficLightBulbGreen=register("traffic_light_green_bulb", new Item(new FabricItemSettings()));
-        TrafficLightBulbYellow=register("traffic_light_yellow_bulb", new Item(new FabricItemSettings()));
-        TrafficLightPavementBulbRed=register("traffic_light_pavement_red_bulb", new Item(new FabricItemSettings()));
-        TrafficLightPavementBulbGreen=register("traffic_light_pavement_green_bulb", new Item(new FabricItemSettings()));
-        RoadLightBulbCold=register("road_light_bulb_cold", new Item(new FabricItemSettings()));
-        RoadLightBulbWarm=register("road_light_bulb_warm", new Item(new FabricItemSettings()));
+        TrafficLightBulbRed=register("traffic_light_red_bulb", new Item(new Item.Properties()));
+        TrafficLightBulbGreen=register("traffic_light_green_bulb", new Item(new Item.Properties()));
+        TrafficLightBulbYellow=register("traffic_light_yellow_bulb", new Item(new Item.Properties()));
+        TrafficLightPavementBulbRed=register("traffic_light_pavement_red_bulb", new Item(new Item.Properties()));
+        TrafficLightPavementBulbGreen=register("traffic_light_pavement_green_bulb", new Item(new Item.Properties()));
+        RoadLightBulbCold=register("road_light_bulb_cold", new Item(new Item.Properties()));
+        RoadLightBulbWarm=register("road_light_bulb_warm", new Item(new Item.Properties()));
         ////BlockItems
-        RoadBlockItem =registerBlock("road_block",RoadBlock);
+        RoadBlockItem = registerBlock(RoadBlock);
         RoadBlockConcreteItem =registerBlock("road_block_concrete",RoadBlockConcrete);
         ManholeCoverItem =registerBlock("manhole_cover",ManholeCover);
         ManholeCoverConcreteItem =registerBlock("manhole_cover_concrete",ManholeCoverConcrete);
@@ -204,7 +207,7 @@ public class AFRoadsItemRegistry {
         LineReversibleLanesFlipItem =registerSticker("line_reversible_lanes_flip",LineReversibleLanesFlip);
         LineReversibleLanesDoubleItem =registerSticker("line_reversible_lanes_double",LineReversibleLanesDouble);
         //创建箭头贴纸
-        ArrowForwardItem =registerSticker("arrow_forward",ArrowForward);
+        ArrowForwardItem = registerSticker(ArrowForward);
         ArrowLeftItem =registerSticker("arrow_left",ArrowLeft);
         ArrowRightItem =registerSticker("arrow_right", ArrowRight);
         ArrowForwardLeftItem =registerSticker("arrow_forward_left",ArrowForwardLeft);
@@ -216,7 +219,7 @@ public class AFRoadsItemRegistry {
         ArrowConfluenceLeftItem =registerSticker("arrow_confluence_left", ArrowConfluenceLeft);
         ArrowConfluenceRightItem =registerSticker("arrow_confluence_right",  ArrowConfluenceRight);
         //创建图标贴纸
-        IconDecelerateStickerItem = registerSticker("icon_decelerate_sticker",IconDecelerateSticker);
+        IconDecelerateStickerItem = registerSticker(IconDecelerateSticker);
         IconStopStickerItem = registerSticker("icon_stop_sticker",IconStopSticker);
         IconGiveWayStickerItem =registerSticker("icon_give_way_sticker",IconGiverWaySticker);
         //创建装饰方块
@@ -237,7 +240,7 @@ public class AFRoadsItemRegistry {
 
         BarrierBarItem =registerDecoration("barrier_bar",BarrierBar);
         TrafficLightsControlBoxItem =registerDecoration("traffic_lights_control_box", TrafficLightsControlBox);
-        TrafficLightItem =registerDecoration("traffic_light",TrafficLight);
+        TrafficLightItem = registerDecoration("traffic_light", TrafficLight);
         TrafficLightPavementItem =registerDecoration("traffic_light_pavement",TrafficLightPavement);
         RoadLightItem =registerDecoration("road_light",RoadLight);
 
